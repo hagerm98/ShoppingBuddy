@@ -1,0 +1,9 @@
+services:
+  mysql:
+    container_name: 'shoppingbuddy-mysql'
+    image: 'mysql:latest'
+    environment:
+      - 'MYSQL_DATABASE=shoppingbuddy'
+      - 'MYSQL_ROOT_PASSWORD=shoppingbuddylocalpasswordroot'
+    ports:
+      - '3307:3306'

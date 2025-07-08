@@ -15,16 +15,11 @@ import lombok.NoArgsConstructor;
 public class Shopper {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_seq")
     private Long id;
 
-    private String firstName;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id", referencedColumnName = "id")
+    @MapsId("id")
+    private User user;
 
-    private String lastName;
-
-    private String email;
-
-    private String phoneNumber;
-
-    private String passwordHash;
 }

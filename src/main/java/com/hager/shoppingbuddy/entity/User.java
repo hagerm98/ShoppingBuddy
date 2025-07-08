@@ -11,16 +11,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "Customers")
-public class Customer {
+@Table(name = "Users")
+public class User {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_seq")
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id", referencedColumnName = "id")
-    @MapsId("id")
-    private User user;
+    private String firstName;
 
-    private String address;
+    private String lastName;
+
+    private String email;
+
+    private String phoneNumber;
 }

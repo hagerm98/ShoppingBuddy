@@ -24,7 +24,9 @@ public class ChatMessage {
     @JoinColumn(name = "shopping_request_id", referencedColumnName = "id")
     private ShoppingRequest shoppingRequest;
 
-    private Long senderId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id", referencedColumnName = "id")
+    private User sender;
 
     private String messageContent;
 

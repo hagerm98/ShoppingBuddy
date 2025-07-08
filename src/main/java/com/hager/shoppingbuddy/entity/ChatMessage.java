@@ -13,7 +13,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "ChatMessages")
+@Table(name = "chat_messages")
 public class ChatMessage {
 
     @Id

@@ -1,5 +1,6 @@
 package com.hager.shoppingbuddy.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,7 +23,13 @@ public class User {
 
     private String lastName;
 
+    @Column(unique = true)
     private String email;
 
+    @Column(unique = true)
     private String phoneNumber;
+
+    @JsonIgnore
+    @Basic(fetch =  FetchType.LAZY)
+    private String passwordHash;
 }

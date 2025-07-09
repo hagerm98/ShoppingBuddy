@@ -50,6 +50,7 @@ public class User implements UserDetails {
 
     private Instant updatedAt;
 
+    @Enumerated(EnumType.STRING)
     private UserRole role;
 
     @Override

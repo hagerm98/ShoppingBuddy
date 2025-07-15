@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 @AllArgsConstructor
 public class UserController {
     private UserService userService;

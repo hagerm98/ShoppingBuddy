@@ -22,6 +22,10 @@ public class RegistrationRequest {
     @Size(max = 100, message = "Email must not exceed 100 characters")
     private String email;
 
+    @NotBlank(message = "Phone number is required")
+    @Pattern(regexp = "^\\+?[1-9]\\d{1,14}$", message = "Phone number must be valid (10-15 digits, optional + prefix)")
+    private String phoneNumber;
+
     @NotBlank(message = "Password is required")
     @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$",

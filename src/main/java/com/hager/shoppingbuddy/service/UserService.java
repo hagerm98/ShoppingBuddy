@@ -57,6 +57,7 @@ public class UserService implements UserDetailsService {
                     .firstName(request.getFirstName().trim())
                     .lastName(request.getLastName().trim())
                     .email(request.getEmail())
+                    .phoneNumber(request.getPhoneNumber().trim())
                     .passwordHash(request.getPassword())
                     .role(request.getUserRole())
                     .createdAt(Instant.now())
@@ -67,7 +68,7 @@ public class UserService implements UserDetailsService {
                     .build();
 
             String token = createUserAndToken(user);
-            String confirmationLink = "http://localhost:8080/user/confirm?token=" + token;
+            String confirmationLink = "http://localhost:8080/api/user/confirm?token=" + token;
 
             log.info("Sending confirmation email to: {}", request.getEmail());
             sendConfirmationEmail(request.getEmail(), request.getFirstName(), confirmationLink);

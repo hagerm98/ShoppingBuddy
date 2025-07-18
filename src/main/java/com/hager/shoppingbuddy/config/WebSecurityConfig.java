@@ -22,7 +22,8 @@ public class WebSecurityConfig {
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers("/user/**").permitAll();
+                    auth.requestMatchers("/", "/home", "/about", "/contact", "/signup", "/login", "/css/**", "/js/**", "/images/**", "/static/**").permitAll();
+                    auth.requestMatchers("/api/user/login", "/api/user/register", "/api/user/confirm", "/api/contact/submit").permitAll();
                     auth.anyRequest().authenticated();
                 })
                 .userDetailsService(userService)

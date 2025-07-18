@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - ShoppingBuddy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <img src="/images/logo.png" alt="Logo" width="30" height="30" class="d-inline-block align-top me-2">
+                ShoppingBuddy
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/signup">Sign Up</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/about">About Us</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contact">Contact Us</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="display-4 fw-bold text-primary mb-4">About ShoppingBuddy</h1>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <h2 class="h3 mb-3">Connecting Communities Through Flexible Delivery</h2>
+                <p class="lead mb-4">
+                    ShoppingBuddy is a peer-to-peer delivery platform that bridges the gap between customers who need items from local stores and independent shoppers willing to help. We connect people who want to purchase from stores that don't offer delivery services with community members ready to shop and deliver for a reward.
+                </p>
+
+                <h2 class="h3 mb-3">Our Features</h2>
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">Flexible Requests</h5>
+                                <p class="card-text">
+                                    Place shopping requests for any items from any store - not limited to partnered retailers. From local ethnic supermarkets to small businesses, get what you need delivered.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">Secure Payments</h5>
+                                <p class="card-text">
+                                    Pre-authorized payment system using Stripe ensures your funds are safely held and only transferred after successful delivery, protecting both customers and shoppers.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">Real-time Tracking</h5>
+                                <p class="card-text">
+                                    Track your order through every stage - from request placement to acceptance, shopping, and delivery. Stay informed with automated email notifications.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">Community Driven</h5>
+                                <p class="card-text">
+                                    Built on community collaboration - earn rewards as a shopper or get convenient delivery as a customer, all while supporting local businesses.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="h3 mb-3">Our Story</h2>
+                <p class="mb-4">
+                    ShoppingBuddy was born from recognizing a significant gap in Ireland's delivery market. While major platforms like Deliveroo and Uber Eats serve large retailers through partnerships, countless small and local stores remain excluded from delivery services. This leaves students, elderly people, busy professionals, and anyone without easy transport struggling to access these essential local businesses.
+                </p>
+                <p class="mb-4">
+                    We realized that stores like Lidl, Aldi, ethnic supermarkets, and local businesses couldn't afford delivery partnerships or dedicated drivers, yet their customers desperately needed these services. Our solution creates a win-win-win situation: customers get what they need, shoppers earn rewards for helping, and local businesses gain access to a broader customer base - all without requiring any involvement from the stores themselves.
+                </p>
+
+                <h2 class="h3 mb-3">Why Choose ShoppingBuddy?</h2>
+                <ul class="list-unstyled mb-4">
+                    <li class="mb-2"><i class="text-primary">✓</i> Access to ANY store, not just partnered retailers</li>
+                    <li class="mb-2"><i class="text-primary">✓</i> Complete flexibility in what you can request</li>
+                    <li class="mb-2"><i class="text-primary">✓</i> Support local and ethnic businesses previously excluded from delivery</li>
+                    <li class="mb-2"><i class="text-primary">✓</i> Secure payment system with buyer and seller protection</li>
+                    <li class="mb-2"><i class="text-primary">✓</i> Community-driven platform that benefits everyone involved</li>
+                </ul>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Get Started Today</h5>
+                        <p class="card-text">
+                            Join thousands of smart shoppers who are already saving time and money with ShoppingBuddy.
+                        </p>
+                        <a href="/signup" class="btn btn-primary btn-lg w-100 mb-2">Sign Up Now</a>
+                        <a href="/contact" class="btn btn-outline-primary w-100">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>ShoppingBuddy</h5>
+                    <p>Connecting communities through flexible peer-to-peer delivery services, bridging the gap between customers and local stores that don't offer traditional delivery options.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2025 ShoppingBuddy. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -6,8 +6,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.hager.shoppingbuddy.dto.RegistrationRequest;
-
 import jakarta.servlet.http.HttpSession;
 
 @Controller
@@ -34,9 +32,7 @@ public class UIController {
     }
 
     @GetMapping("/signup")
-    public String signup(Model model) {
-        model.addAttribute("registrationRequest", new RegistrationRequest());
-        model.addAttribute("currentPage", "signup");
+    public String signup() {
         return "signup";
     }
 
@@ -45,18 +41,10 @@ public class UIController {
                         HttpSession session,
                         @RequestParam(value = "confirmationSuccess", required = false)
                         Boolean confirmationSuccess,
-                        @RequestParam(value = "message", required = false)
-                        String message,
                         @RequestParam(value = "error", required = false)
                         String error) {
-        model.addAttribute("currentPage", "login");
-
         if (confirmationSuccess != null && confirmationSuccess) {
             model.addAttribute("confirmationSuccess", true);
-        }
-
-        if (message != null) {
-            model.addAttribute("successMessage", message);
         }
 
         if (error != null) {
@@ -93,8 +81,8 @@ public class UIController {
 
     @GetMapping("/error-page")
     public String errorPage(Model model,
-                        @RequestParam(value = "errorMessage", required = false) String errorMessage,
-                        @RequestParam(value = "errorDetails", required = false) String errorDetails) {
+                            @RequestParam(value = "errorMessage", required = false) String errorMessage,
+                            @RequestParam(value = "errorDetails", required = false) String errorDetails) {
 
         if (errorMessage != null) {
             model.addAttribute("errorMessage", errorMessage);
@@ -104,6 +92,6 @@ public class UIController {
             model.addAttribute("errorDetails", errorDetails);
         }
 
-        return "error";
+        return "error-page";
     }
 }

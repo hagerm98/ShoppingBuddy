@@ -22,7 +22,7 @@ public class WebSecurityConfig {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
-                            "/", "/home", "/about", "/contact", "/signup", "/login",
+                            "/", "/home", "/about", "/contact", "/signup", "/login", "/error-page",
                             "/css/**", "/js/**", "/images/**", "/static/**"
                     ).permitAll();
                     auth.requestMatchers(

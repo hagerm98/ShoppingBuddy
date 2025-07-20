@@ -16,7 +16,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
+    @Value("${shoppingbuddy.email}")
     private String fromEmail;
 
     public void send(String to, String subject, String email) {

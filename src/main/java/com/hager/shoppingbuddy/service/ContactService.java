@@ -13,7 +13,7 @@ public class ContactService {
 
     private final EmailService emailService;
 
-    @Value("${spring.mail.username}")
+    @Value("${shoppingbuddy.email}")
     private String companyEmail;
 
     public void processContactForm(ContactRequest contactRequest) {

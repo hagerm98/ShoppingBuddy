@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/header :: head('Login - ShoppingBuddy')}"></head>
+<body>
+    <nav th:replace="~{layout/header :: navbar}"></nav>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h2 class="mb-0">Welcome Back!</h2>
+                        <p class="mb-0 mt-2">Sign in to your ShoppingBuddy account</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Success Message for Token Confirmation -->
+                        <div th:if="${confirmationSuccess}" class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Account Confirmed Successfully!</strong> Your email has been verified. You can now log in to your account.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+
+                        <!-- General Success Message -->
+                        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <span th:text="${successMessage}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+
+                        <!-- Spring Security Authentication Error -->
+                        <div th:if="${authenticationError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Login Failed!</strong> <span th:text="${authenticationError}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+
+                        <!-- Fallback for basic error parameter -->
+                        <div th:if="${param.error != null and authenticationError == null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Login Failed!</strong> Invalid email or password. Please try again.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+
+                        <!-- Logout Success Message -->
+                        <div th:if="${param.logout}" class="alert alert-info alert-dismissible fade show" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            You have been successfully logged out.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+
+                        <form method="post" action="/api/user/login">
+                            <!-- Email -->
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="username" name="username"
+                                       placeholder="Enter your email address" required>
+                            </div>
+
+                            <!-- Password -->
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="password" name="password"
+                                       placeholder="Enter your password" required>
+                            </div>
+
+                            <!-- Remember Me -->
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="remember-me" name="remember-me">
+                                <label class="form-check-label" for="remember-me">
+                                    Remember me
+                                </label>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Additional Links -->
+                        <div class="text-center">
+                            <p class="mb-0">
+                                Don't have an account?
+                                <a href="/signup" class="text-decoration-none fw-bold">Sign up here</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+</body>
+</html>

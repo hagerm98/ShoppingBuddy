@@ -3,9 +3,12 @@ package com.hager.shoppingbuddy.service;
 import com.hager.shoppingbuddy.dto.RegistrationRequest;
 import com.hager.shoppingbuddy.entity.Token;
 import com.hager.shoppingbuddy.entity.User;
+import com.hager.shoppingbuddy.exception.EmailAlreadyExistsException;
+import com.hager.shoppingbuddy.exception.InvalidTokenException;
+import com.hager.shoppingbuddy.exception.TokenExpiredException;
+import com.hager.shoppingbuddy.exception.UserNotFoundException;
 import com.hager.shoppingbuddy.repository.TokenRepository;
 import com.hager.shoppingbuddy.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
@@ -28,7 +32,7 @@ public class UserService implements UserDetailsService {
     private final EmailService emailService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    private final static String USER_NOT_FOUND_MESSAGE = "User with email %s not found";
+    private final static String USER_NOT_FOUND_MESSAGE = "We couldn't find an account associated with the email address %s. Please check your email or create a new account.";
     private final static long TOKEN_EXPIRY_HOURS = 24;
 
     @Override
@@ -38,10 +42,10 @@ public class UserService implements UserDetailsService {
             new UsernameNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, email)));
     }
 
-    public void enableUser(String email) {
+    public void enableUser(String email) throws UserNotFoundException {
         log.info("Enabling user with email: {}", email);
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException(String.format(USER_NOT_FOUND_MESSAGE, email)));
+                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, email)));
 
         user.setEnabled(true);
         userRepository.save(user);
@@ -49,81 +53,70 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public boolean register(RegistrationRequest request) {
+    public boolean register(RegistrationRequest request) throws EmailAlreadyExistsException {
         log.info("Registering user: {} with role: {}", request.getEmail(), request.getUserRole());
 
-        try {
-            User user = User.builder()
-                    .firstName(request.getFirstName().trim())
-                    .lastName(request.getLastName().trim())
-                    .email(request.getEmail())
-                    .phoneNumber(request.getPhoneNumber().trim())
-                    .passwordHash(request.getPassword())
-                    .role(request.getUserRole())
-                    .createdAt(Instant.now())
-                    .updatedAt(Instant.now())
-                    .isEnabled(false)
-                    .isLocked(false)
-                    .lastPasswordChange(Instant.now())
-                    .build();
+        User user = User.builder()
+                .firstName(request.getFirstName().trim())
+                .lastName(request.getLastName().trim())
+                .email(request.getEmail())
+                .phoneNumber(request.getPhoneNumber().trim())
+                .passwordHash(request.getPassword())
+                .role(request.getUserRole())
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .isEnabled(false)
+                .isLocked(false)
+                .lastPasswordChange(Instant.now())
+                .build();
 
-            String token = createUserAndToken(user);
-            String confirmationLink = "http://localhost:8080/api/user/confirm?token=" + token;
+        String token = createUserAndToken(user);
+        String confirmationLink = "http://localhost:8080/api/user/confirm?token=" + token;
 
-            log.info("Sending confirmation email to: {}", request.getEmail());
-            sendConfirmationEmail(request.getEmail(), request.getFirstName(), confirmationLink);
+        log.info("Sending confirmation email to: {}", request.getEmail());
+        sendConfirmationEmail(request.getEmail(), request.getFirstName(), confirmationLink);
 
-            return true;
-        } catch (Exception e) {
-            log.error("Registration failed for user: {}", request.getEmail(), e);
-            throw e;
-        }
+        return true;
     }
 
-    @Transactional
-    public boolean confirmToken(String token) {
+    @Transactional(noRollbackFor = {InvalidTokenException.class, TokenExpiredException.class})
+    public void confirmToken(String token) throws InvalidTokenException, TokenExpiredException, UserNotFoundException {
         log.info("Confirming token: {}", token);
 
-        try {
-            if (!StringUtils.hasText(token)) {
-                throw new IllegalStateException("Token cannot be empty");
-            }
-
-            Token confirmationToken = tokenRepository.findByToken(token)
-                    .orElseThrow(() -> new IllegalStateException("Invalid token"));
-
-            log.info("Found confirmation token for user: {}", confirmationToken.getUser().getEmail());
-
-            if (confirmationToken.getConfirmedAt() != null) {
-                return true;
-            }
-
-            Instant expiresAt = confirmationToken.getExpiresAt();
-            if (expiresAt.isBefore(Instant.now())) {
-                log.warn("Expired token used: {}", token);
-                throw new IllegalStateException("Confirmation Token expired.");
-            }
-
-            confirmationToken.setConfirmedAt(Instant.now());
-            log.info("Setting confirmation time for token: {}", token);
-            tokenRepository.save(confirmationToken);
-
-            enableUser(confirmationToken.getUser().getEmail());
-
-            return true;
-        } catch (Exception e) {
-            log.error("Token confirmation failed for token: {}", token, e);
-            throw e;
+        if (!StringUtils.hasText(token)) {
+            throw new InvalidTokenException("The confirmation link appears to be incomplete. Please check your email and click the complete confirmation link.");
         }
+
+        Token confirmationToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new InvalidTokenException("This confirmation link is not valid or may have already been used. Please request a new confirmation email."));
+
+        log.info("Found confirmation token for user: {}", confirmationToken.getUser().getEmail());
+
+        if (confirmationToken.getConfirmedAt() != null) {
+            return;
+        }
+
+        Instant expiresAt = confirmationToken.getExpiresAt();
+        if (expiresAt.isBefore(Instant.now())) {
+            log.warn("Expired token used: {}", token);
+            throw new TokenExpiredException("Your confirmation link has expired. For security reasons, confirmation links are only valid for 24 hours. Please register again to receive a new confirmation email.");
+        }
+
+        confirmationToken.setConfirmedAt(Instant.now());
+        log.info("Setting confirmation time for token: {}", token);
+        tokenRepository.save(confirmationToken);
+
+        enableUser(confirmationToken.getUser().getEmail());
+
     }
 
-    private String createUserAndToken(User user) {
+    private String createUserAndToken(User user) throws EmailAlreadyExistsException {
         log.info("Signing up user: {}", user.getEmail());
 
         boolean userExists = userRepository.findByEmail(user.getEmail()).isPresent();
         if (userExists) {
             log.warn("Attempt to register with existing email: {}", user.getEmail());
-            throw new IllegalStateException("Email already taken");
+            throw new EmailAlreadyExistsException("An account with this email address already exists. Please try logging in instead, or use a different email address to create a new account.");
         }
 
         String encodedPassword = bCryptPasswordEncoder.encode(user.getPassword());

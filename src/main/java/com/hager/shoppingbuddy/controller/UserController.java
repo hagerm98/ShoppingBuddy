@@ -2,14 +2,19 @@ package com.hager.shoppingbuddy.controller;
 
 import com.hager.shoppingbuddy.dto.RegistrationRequest;
 import com.hager.shoppingbuddy.dto.RegistrationResponse;
-import com.hager.shoppingbuddy.dto.TokenConfirmationResponse;
+import com.hager.shoppingbuddy.exception.EmailAlreadyExistsException;
+import com.hager.shoppingbuddy.exception.InvalidTokenException;
+import com.hager.shoppingbuddy.exception.TokenExpiredException;
+import com.hager.shoppingbuddy.exception.UserNotFoundException;
 import com.hager.shoppingbuddy.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 @Slf4j
 @RestController
@@ -19,7 +24,7 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<RegistrationResponse> register(@RequestBody @Valid RegistrationRequest registrationRequest) {
+    public ResponseEntity<RegistrationResponse> register(@RequestBody @Valid RegistrationRequest registrationRequest) throws EmailAlreadyExistsException {
         log.info("Received registration request for user: {}", registrationRequest.getEmail());
 
         boolean isSuccessful = userService.register(registrationRequest);
@@ -40,17 +45,10 @@ public class UserController {
     }
 
     @GetMapping("/confirm")
-    public ResponseEntity<TokenConfirmationResponse> confirm(@RequestParam("token") String token) {
+    public RedirectView confirm(@RequestParam("token") @NotBlank String token) throws UserNotFoundException, InvalidTokenException, TokenExpiredException {
         log.info("Received confirmation request for token: {}", token);
 
-        boolean isSuccessful = userService.confirmToken(token);
-        HttpStatus status = isSuccessful ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
-        return ResponseEntity.status(status).body(
-                new TokenConfirmationResponse(
-                        isSuccessful ? "Token confirmed successfully" : "Token confirmation failed",
-                        isSuccessful,
-                        isSuccessful ? "/user/login" : null
-                )
-        );
+        userService.confirmToken(token);
+        return new RedirectView("/login?confirmationSuccess=true");
     }
 }

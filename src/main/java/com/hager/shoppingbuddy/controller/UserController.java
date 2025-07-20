@@ -24,9 +24,15 @@ public class UserController {
 
         boolean isSuccessful = userService.register(registrationRequest);
         HttpStatus status = isSuccessful ? HttpStatus.CREATED : HttpStatus.BAD_REQUEST;
+
+        String message = isSuccessful
+                ? "Registration successful! We've sent a confirmation email to " + registrationRequest.getEmail() +
+                ". Please check your inbox and click the confirmation link to activate your account."
+                : "Registration failed. This email address may already be registered or there was a server error. Please try again.";
+
         return ResponseEntity.status(status).body(
                 new RegistrationResponse(
-                        isSuccessful ? "User registered successfully" : "User registration failed",
+                        message,
                         registrationRequest.getEmail(),
                         isSuccessful
                 )

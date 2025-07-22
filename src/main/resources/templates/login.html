@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout/header :: head('Login - ShoppingBuddy')}"></head>
 <body>
-    <nav th:replace="~{layout/header :: navbar}"></nav>
+    <nav th:replace="~{layout/header :: navbar('login')}"></nav>
 
     <div class="container mt-5">
         <div class="row justify-content-center">
@@ -72,7 +72,7 @@
                             </div>
                         </form>
 
-                        <!-- Additional Links -->
+                        <!-- Sign up link if you don't have an account -->
                         <div class="text-center">
                             <p class="mb-0">
                                 Don't have an account?

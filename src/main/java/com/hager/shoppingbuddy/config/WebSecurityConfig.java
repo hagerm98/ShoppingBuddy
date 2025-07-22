@@ -43,6 +43,13 @@ public class WebSecurityConfig {
                     .tokenValiditySeconds(604800) // 1 Week
                     .key("shoppingBuddyRememberMeKey")
                 )
+                .logout(logout -> logout
+                    .logoutUrl("/logout")
+                    .logoutSuccessUrl("/login?logout=true")
+                    .invalidateHttpSession(true)
+                    .deleteCookies("JSESSIONID", "remember-me")
+                    .permitAll()
+                )
                 .build();
     }
 

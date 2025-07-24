@@ -6,9 +6,10 @@ import com.hager.shoppingbuddy.entity.User;
 import com.hager.shoppingbuddy.exception.*;
 import com.hager.shoppingbuddy.repository.TokenRepository;
 import com.hager.shoppingbuddy.repository.UserRepository;
-import lombok.AllArgsConstructor;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,12 +23,15 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final EmailService emailService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Value("${shoppingbuddy.base-url}")
+    private String baseUrl;
 
     private final static String USER_NOT_FOUND_MESSAGE = "We couldn't find an account associated with the email address %s. Please check your email or create a new account.";
     private final static long TOKEN_EXPIRY_HOURS = 24;
@@ -69,7 +73,7 @@ public class UserService implements UserDetailsService {
                 .build();
 
         String token = createUserAndToken(user);
-        String confirmationLink = "http://localhost:8080/api/user/confirm?token=" + token;
+        String confirmationLink = baseUrl + "/api/user/confirm?token=" + token;
 
         log.info("Sending confirmation email to: {}", request.getEmail());
         sendConfirmationEmail(request.getEmail(), request.getFirstName(), confirmationLink);

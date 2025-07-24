@@ -3,10 +3,7 @@ package com.hager.shoppingbuddy.service;
 import com.hager.shoppingbuddy.dto.RegistrationRequest;
 import com.hager.shoppingbuddy.entity.Token;
 import com.hager.shoppingbuddy.entity.User;
-import com.hager.shoppingbuddy.exception.EmailAlreadyExistsException;
-import com.hager.shoppingbuddy.exception.InvalidTokenException;
-import com.hager.shoppingbuddy.exception.TokenExpiredException;
-import com.hager.shoppingbuddy.exception.UserNotFoundException;
+import com.hager.shoppingbuddy.exception.*;
 import com.hager.shoppingbuddy.repository.TokenRepository;
 import com.hager.shoppingbuddy.repository.UserRepository;
 import lombok.AllArgsConstructor;
@@ -38,15 +35,16 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         log.info("Loading user by email: {}", email);
-        return userRepository.findByEmail(email).orElseThrow(() ->
-            new UsernameNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, email)));
+        try {
+            return findByEmail(email);
+        } catch (UserNotFoundException e) {
+            throw new UsernameNotFoundException(e.getMessage(), e);
+        }
     }
 
     public void enableUser(String email) throws UserNotFoundException {
         log.info("Enabling user with email: {}", email);
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, email)));
-
+        User user = findByEmail(email);
         user.setEnabled(true);
         userRepository.save(user);
         log.info("User enabled: {}", email);
@@ -148,5 +146,48 @@ public class UserService implements UserDetailsService {
                 + "<p>The Shopping Buddy Team</p>";
 
         emailService.send(email, "Confirm Your Shopping Buddy New Account", emailBody);
+    }
+
+    public User findByEmail(String email) throws UserNotFoundException {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, email)));
+    }
+
+    @Transactional
+    public void updateProfile(String currentUserEmail, String firstName, String lastName, String phoneNumber)
+            throws UserNotFoundException {
+        log.info("Updating profile for user: {}", currentUserEmail);
+
+        User user = findByEmail(currentUserEmail);
+
+        user.setFirstName(firstName.trim());
+        user.setLastName(lastName.trim());
+        user.setPhoneNumber(phoneNumber.trim());
+        user.setUpdatedAt(Instant.now());
+
+        userRepository.save(user);
+        log.info("Profile updated successfully for user: {}", currentUserEmail);
+
+    }
+
+    @Transactional
+    public void changePassword(String userEmail, String currentPassword, String newPassword)
+            throws PasswordChangeException, UserNotFoundException {
+        log.info("Changing password for user: {}", userEmail);
+
+        User user = findByEmail(userEmail);
+
+        if (!bCryptPasswordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new PasswordChangeException("Current password is incorrect");
+        }
+
+        String encodedNewPassword = bCryptPasswordEncoder.encode(newPassword);
+        user.setPasswordHash(encodedNewPassword);
+        user.setLastPasswordChange(Instant.now());
+        user.setUpdatedAt(Instant.now());
+
+        userRepository.save(user);
+        log.info("Password changed successfully for user: {}", userEmail);
+
     }
 }

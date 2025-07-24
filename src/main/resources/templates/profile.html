@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/header :: head('My Profile - ShoppingBuddy')}"></head>
+<body>
+    <nav th:replace="~{layout/header :: navbar('profile')}"></nav>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="display-5 fw-bold text-primary mb-4">
+                    <i class="fas fa-user-circle me-2"></i>My Profile
+                </h1>
+            </div>
+        </div>
+
+        <div id="loadingSpinner" class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading your profile...</p>
+        </div>
+
+        <div id="profileContent" class="row">
+
+            <div class="col-lg-8">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>Profile Information
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="profileAlertContainer"></div>
+
+                        <form id="profileForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="firstName" class="form-label">First Name *</label>
+                                    <input type="text" class="form-control" id="firstName" name="firstName" required>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="lastName" class="form-label">Last Name *</label>
+                                    <input type="text" class="form-control" id="lastName" name="lastName" required>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" readonly>
+                                <small class="form-text text-muted">Email address cannot be changed</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phoneNumber" class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Account Type</label>
+                                <div class="form-control-plaintext">
+                                    <span class="badge bg-secondary fs-6" id="userRole"></span>
+                                </div>
+                                <small class="form-text text-muted">Account type cannot be changed</small>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" id="profileSubmitBtn">
+                                <i class="fas fa-save me-2"></i>Update Profile
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow">
+                    <div class="card-header bg-warning text-dark">
+                        <h4 class="mb-0">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="passwordAlertContainer"></div>
+
+                        <form id="passwordForm">
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label">Current Password *</label>
+                                <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">New Password *</label>
+                                <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                                <div class="form-text">
+                                    Password must contain at least 8 characters with uppercase, lowercase, number, and special character.
+                                </div>
+                                <div class="invalid-feedback"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirmNewPassword" class="form-label">Confirm New Password *</label>
+                                <input type="password" class="form-control" id="confirmNewPassword" name="confirmNewPassword" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+
+                            <button type="submit" class="btn btn-warning" id="passwordSubmitBtn">
+                                <i class="fas fa-lock me-2"></i>Change Password
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Account Information</h5>
+
+                        <div class="mb-3">
+                            <strong>Member Since:</strong>
+                            <p class="text-muted mb-0" id="memberSince"></p>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Last Updated:</strong>
+                            <p class="text-muted mb-0" id="lastUpdated"></p>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Account Status:</strong>
+                            <p class="mb-0">
+                                <span id="accountStatus" class="badge"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Quick Actions</h5>
+                        <div class="d-grid gap-2">
+                            <a href="/shopping-requests" class="btn btn-outline-primary">
+                                <i class="fas fa-shopping-bag me-2"></i>Shopping Requests History
+                            </a>
+                            <a href="/contact" class="btn btn-outline-secondary">
+                                <i class="fas fa-envelope me-2"></i>Contact Support
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+    <script th:replace="~{layout/footer :: scripts}"></script>
+
+    <script>
+        let userData = null;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadUserProfile();
+        });
+
+        async function loadUserProfile() {
+            const loadingSpinner = document.getElementById('loadingSpinner');
+
+            try {
+                const response = await fetch('/api/user', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    userData = await response.json();
+                    populateProfileForm(userData);
+                    loadingSpinner.style.display = 'none';
+                } else {
+                    throw new Error('Failed to load profile data');
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                loadingSpinner.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Failed to load profile data. Please refresh the page to try again.
+                    </div>
+                `;
+            }
+        }
+
+        function populateProfileForm(user) {
+            document.getElementById('firstName').value = user.firstName || '';
+            document.getElementById('lastName').value = user.lastName || '';
+            document.getElementById('email').value = user.email || '';
+            document.getElementById('phoneNumber').value = user.phoneNumber || '';
+            document.getElementById('userRole').textContent = user.role || '';
+
+            if (user.createdAt) {
+                document.getElementById('memberSince').textContent = formatDate(user.createdAt);
+            }
+            if (user.updatedAt) {
+                document.getElementById('lastUpdated').textContent = formatDate(user.updatedAt);
+            }
+
+            const statusElement = document.getElementById('accountStatus');
+            if (user.enabled) {
+                statusElement.className = 'badge bg-success';
+                statusElement.textContent = 'Active';
+            } else {
+                statusElement.className = 'badge bg-danger';
+                statusElement.textContent = 'Inactive';
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit'
+            });
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await handleFormSubmit(this, '/api/user', 'profileAlertContainer', 'profileSubmitBtn');
+        });
+
+        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await handleFormSubmit(this, '/api/user/change-password', 'passwordAlertContainer', 'passwordSubmitBtn');
+        });
+
+        async function handleFormSubmit(form, url, alertContainerId, submitBtnId) {
+            const submitBtn = document.getElementById(submitBtnId);
+            const alertContainer = document.getElementById(alertContainerId);
+
+            alertContainer.innerHTML = '';
+            clearFormErrors(form);
+
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Updating...';
+            submitBtn.disabled = true;
+
+            try {
+                const formData = new FormData(form);
+                const requestData = Object.fromEntries(formData.entries());
+
+                delete requestData.email;
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (response.ok) {
+                    const result = await response.text();
+                    showAlert(alertContainer, 'success', result);
+                    if (url.includes('change-password')) {
+                        form.reset();
+                    } else {
+                        await loadUserProfile();
+                    }
+                } else {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const validationErrors = await response.json();
+                        displayValidationErrors(form, validationErrors);
+                        showAlert(alertContainer, 'danger', 'Please correct the errors below and try again.');
+                    } else {
+                        const errorMessage = await response.text();
+                        showAlert(alertContainer, 'danger', errorMessage);
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert(alertContainer, 'danger', 'An error occurred. Please try again.');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        function displayValidationErrors(form, errors) {
+            Object.keys(errors).forEach(fieldName => {
+                const field = form.querySelector(`[name="${fieldName}"]`);
+                if (field) {
+                    field.classList.add('is-invalid');
+                    const feedback = field.nextElementSibling;
+                    if (feedback && feedback.classList.contains('invalid-feedback')) {
+                        feedback.textContent = errors[fieldName];
+                    }
+                }
+            });
+        }
+
+        function showAlert(container, type, message) {
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+            container.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    <i class="fas ${iconClass} me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            container.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function clearFormErrors(form) {
+            form.querySelectorAll('.is-invalid').forEach(field => {
+                field.classList.remove('is-invalid');
+            });
+            form.querySelectorAll('.invalid-feedback').forEach(feedback => {
+                feedback.textContent = '';
+            });
+        }
+    </script>
+</body>
+</html>

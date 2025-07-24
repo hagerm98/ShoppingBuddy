@@ -1,5 +1,6 @@
 package com.hager.shoppingbuddy.controller;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -93,5 +94,15 @@ public class UIController {
         }
 
         return "error-page";
+    }
+
+    @GetMapping("/profile")
+    public String profile(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() ||
+            authentication.getPrincipal().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+
+        return "profile";
     }
 }

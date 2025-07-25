@@ -1,11 +1,9 @@
 package com.hager.shoppingbuddy.service;
 
 import com.hager.shoppingbuddy.dto.RegistrationRequest;
-import com.hager.shoppingbuddy.entity.Token;
-import com.hager.shoppingbuddy.entity.User;
+import com.hager.shoppingbuddy.entity.*;
 import com.hager.shoppingbuddy.exception.*;
-import com.hager.shoppingbuddy.repository.TokenRepository;
-import com.hager.shoppingbuddy.repository.UserRepository;
+import com.hager.shoppingbuddy.repository.*;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +25,8 @@ import java.util.UUID;
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
+    private final CustomerRepository customerRepository;
+    private final ShopperRepository shopperRepository;
     private final EmailService emailService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
@@ -125,19 +125,48 @@ public class UserService implements UserDetailsService {
         user.setPasswordHash(encodedPassword);
 
         log.info("Saving user: {}", user.getEmail());
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        createRoleSpecificEntity(savedUser);
 
         String token = UUID.randomUUID().toString();
         Token confirmationToken = Token.builder()
                 .token(token)
                 .createdAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(60 * 60 * TOKEN_EXPIRY_HOURS))
-                .user(user)
+                .user(savedUser)
                 .build();
 
         log.info("Saving confirmation token for user: {}", user.getEmail());
         tokenRepository.save(confirmationToken);
         return token;
+    }
+
+    private void createRoleSpecificEntity(User user) {
+        log.info("Creating role-specific entity for user: {} with role: {}", user.getEmail(), user.getRole());
+
+        switch (user.getRole()) {
+            case CUSTOMER:
+                Customer customer = Customer.builder()
+                        .user(user)
+                        .address(null)
+                        .build();
+                customerRepository.save(customer);
+                log.info("Created Customer entity for user: {}", user.getEmail());
+                break;
+
+            case SHOPPER:
+                Shopper shopper = Shopper.builder()
+                        .user(user)
+                        .build();
+                shopperRepository.save(shopper);
+                log.info("Created Shopper entity for user: {}", user.getEmail());
+                break;
+
+            default:
+                log.error("Unknown user role: {} for user: {}", user.getRole(), user.getEmail());
+                throw new IllegalArgumentException("Unknown user role: " + user.getRole());
+        }
     }
 
     private void sendConfirmationEmail(String email, String name, String confirmationLink) {

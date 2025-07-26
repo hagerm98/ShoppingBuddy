@@ -37,10 +37,34 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public RedirectView handleException(RuntimeException ex) {
-        log.error("RuntimeException: {}", ex.getMessage());
-        return createErrorRedirect(ex.getMessage(), "We encountered an unexpected issue while processing your request. Please try again, and if the problem continues, contact our support team.");
+    @ExceptionHandler(ShoppingRequestNotFoundException.class)
+    public ResponseEntity<String> handleShoppingRequestNotFoundException(ShoppingRequestNotFoundException ex) {
+        log.error("ShoppingRequestNotFoundException: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(CustomerNotFoundException.class)
+    public ResponseEntity<String> handleCustomerNotFoundException(CustomerNotFoundException ex) {
+        log.error("CustomerNotFoundException: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(ShopperNotFoundException.class)
+    public ResponseEntity<String> handleShopperNotFoundException(ShopperNotFoundException ex) {
+        log.error("ShopperNotFoundException: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(UnauthorizedRoleException.class)
+    public ResponseEntity<String> handleUnauthorizedRoleException(UnauthorizedRoleException ex) {
+        log.error("UnauthorizedRoleException: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidShoppingRequestActionException.class)
+    public ResponseEntity<String> handleInvalidShoppingRequestActionException(InvalidShoppingRequestActionException ex) {
+        log.error("InvalidShoppingRequestActionException: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -79,6 +103,12 @@ public class GlobalExceptionHandler {
                 ex.getClass().getSimpleName(),
                 ex.getMessage()
         );
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public RedirectView handleException(RuntimeException ex) {
+        log.error("RuntimeException: {}", ex.getMessage());
+        return createErrorRedirect(ex.getMessage(), "We encountered an unexpected issue while processing your request. Please try again, and if the problem continues, contact our support team.");
     }
 
     @ExceptionHandler(Exception.class)

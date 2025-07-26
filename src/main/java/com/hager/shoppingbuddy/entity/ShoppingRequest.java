@@ -32,7 +32,7 @@ public class ShoppingRequest {
     @Enumerated(EnumType.STRING)
     private ShoppingRequestStatus status;
 
-    @OneToMany(mappedBy = "shoppingRequest", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "shoppingRequest", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Item> items;
 
     @OneToMany(mappedBy = "shoppingRequest", fetch = FetchType.LAZY)
@@ -42,7 +42,9 @@ public class ShoppingRequest {
 
     private Instant updatedAt;
 
-    private double totalPrice;
+    private double estimatedItemsPrice;
+
+    private double deliveryFee;
 
     private String deliveryAddress;
 

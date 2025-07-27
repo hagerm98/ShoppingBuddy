@@ -147,6 +147,22 @@ public class ShoppingRequestController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/{requestId}")
+    public ResponseEntity<ShoppingRequestResponse> updateShoppingRequest(
+            @PathVariable Long requestId,
+            @Valid @RequestBody ShoppingRequestUpdateRequest request,
+            Authentication authentication
+    ) throws CustomerNotFoundException, UnauthorizedRoleException, ShoppingRequestNotFoundException, InvalidShoppingRequestActionException {
+
+        verifyUserRole(authentication, UserRole.CUSTOMER);
+        log.info("Updating shopping request {} for customer: {}", requestId, authentication.getName());
+
+        ShoppingRequestResponse response = shoppingRequestService.updateShoppingRequest(
+                requestId, authentication.getName(), request);
+
+        return ResponseEntity.ok(response);
+    }
+
     private void verifyUserRole(Authentication authentication, UserRole requiredRole) throws UnauthorizedRoleException {
         SimpleGrantedAuthority requiredAuthority = new SimpleGrantedAuthority(requiredRole.name());
         if (!authentication.getAuthorities().contains(requiredAuthority)) {

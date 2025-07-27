@@ -41,22 +41,7 @@ public class ShoppingRequestService {
                 .updatedAt(Instant.now())
                 .build();
 
-        List<Item> items = request.getItems().stream()
-                .map(itemRequest -> {
-                    Item item = Item.builder()
-                        .name(itemRequest.getName())
-                        .description(itemRequest.getDescription())
-                        .amount(itemRequest.getAmount())
-                        .category(itemRequest.getCategory())
-                        .build();
-                    item.setShoppingRequest(shoppingRequest);
-                    return item;
-                })
-                .collect(Collectors.toList());
-
-        shoppingRequest.setItems(items);
-
-        ShoppingRequest savedRequest = shoppingRequestRepository.save(shoppingRequest);
+        ShoppingRequest savedRequest = populateShoppingRequestItems(shoppingRequest, request.getItems());
 
         log.info("Successfully created shopping request with ID: {}", savedRequest.getId());
         return convertToResponse(savedRequest);
@@ -189,6 +174,55 @@ public class ShoppingRequestService {
         ShoppingRequest savedRequest = shoppingRequestRepository.save(request);
         log.info("Shopping request {} cancelled by user: {}", requestId, userEmail);
         return convertToResponse(savedRequest);
+    }
+
+    @Transactional
+    public ShoppingRequestResponse updateShoppingRequest(Long requestId, String customerEmail, ShoppingRequestUpdateRequest request)
+            throws CustomerNotFoundException, ShoppingRequestNotFoundException, InvalidShoppingRequestActionException {
+        log.info("Updating shopping request {} for customer: {}", requestId, customerEmail);
+
+        Customer customer = customerRepository.findByUserEmail(customerEmail)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found with email: " + customerEmail));
+
+        ShoppingRequest shoppingRequest = shoppingRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ShoppingRequestNotFoundException("Shopping request not found with ID: " + requestId));
+
+        if (!shoppingRequest.getCustomer().getId().equals(customer.getId())) {
+            throw new InvalidShoppingRequestActionException("Customer not authorized to edit this request");
+        }
+
+        if (shoppingRequest.getStatus() != ShoppingRequestStatus.PENDING) {
+            throw new InvalidShoppingRequestActionException("Can only edit shopping requests in PENDING status");
+        }
+
+        shoppingRequest.setDeliveryAddress(request.getDeliveryAddress());
+        shoppingRequest.setEstimatedItemsPrice(request.getEstimatedItemsPrice());
+        shoppingRequest.setDeliveryFee(request.getDeliveryFee());
+        shoppingRequest.setUpdatedAt(Instant.now());
+
+        ShoppingRequest savedRequest = populateShoppingRequestItems(shoppingRequest, request.getItems());
+
+        log.info("Successfully updated shopping request with ID: {}", savedRequest.getId());
+        return convertToResponse(savedRequest);
+    }
+
+    private ShoppingRequest populateShoppingRequestItems(ShoppingRequest shoppingRequest, List<ItemRequest> itemRequests) {
+        List<Item> newItems = itemRequests.stream()
+                .map(itemRequest -> {
+                    Item item = Item.builder()
+                        .name(itemRequest.getName())
+                        .description(itemRequest.getDescription())
+                        .amount(itemRequest.getAmount())
+                        .category(itemRequest.getCategory())
+                        .build();
+                    item.setShoppingRequest(shoppingRequest);
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+        shoppingRequest.setItems(newItems);
+
+        return shoppingRequestRepository.save(shoppingRequest);
     }
 
     private Long getShopperIdByEmail(String email) throws ShopperNotFoundException {

@@ -13,14 +13,12 @@
                         <p class="mb-0 mt-2">Join our community of shoppers and customers</p>
                     </div>
                     <div class="card-body p-4">
-                        <!-- Success Message -->
                         <div id="successMessage" class="alert alert-success alert-dismissible fade show d-none" role="alert">
                             <i class="fas fa-check-circle me-2"></i>
                             <span id="successText"></span>
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
 
-                        <!-- Error Message -->
                         <div id="errorMessage" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
                             <i class="fas fa-exclamation-triangle me-2"></i>
                             <span id="errorText"></span>
@@ -37,7 +35,6 @@
                                     <div class="invalid-feedback"></div>
                                 </div>
 
-                                <!-- Last Name -->
                                 <div class="col-md-6 mb-3">
                                     <label for="lastName" class="form-label">Last Name <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="lastName" name="lastName"
@@ -46,7 +43,6 @@
                                 </div>
                             </div>
 
-                            <!-- Email -->
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control" id="email" name="email"
@@ -54,7 +50,6 @@
                                 <div class="invalid-feedback"></div>
                             </div>
 
-                            <!-- Phone Number -->
                             <div class="mb-3">
                                 <label for="phoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
                                 <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber"
@@ -63,7 +58,6 @@
                                 <div class="invalid-feedback"></div>
                             </div>
 
-                            <!-- Password -->
                             <div class="mb-3">
                                 <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
                                 <input type="password" class="form-control" id="password" name="password"
@@ -74,7 +68,6 @@
                                 <div class="invalid-feedback"></div>
                             </div>
 
-                            <!-- User Role -->
                             <div class="mb-4">
                                 <label class="form-label">I want to join as <span class="text-danger">*</span></label>
                                 <div class="row">
@@ -108,7 +101,6 @@
                                 <div class="text-danger mt-2 d-none" id="userRoleError"></div>
                             </div>
 
-                            <!-- Submit Button -->
                             <div class="d-grid gap-2">
                                 <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
                                     <i class="fas fa-user-plus me-2"></i>Create Account
@@ -116,7 +108,6 @@
                             </div>
                         </form>
 
-                        <!-- Login Link -->
                         <div class="text-center mt-4">
                             <p class="text-muted">Already have an account?
                                 <a href="/login" class="text-primary text-decoration-none fw-bold">Sign in here</a>
@@ -128,20 +119,16 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer th:replace="~{layout/footer :: footer}"></footer>
 
-    <!-- Bootstrap JS and FontAwesome -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            // Clear previous error states
             clearErrors();
 
-            // Get form data
             const formData = new FormData(e.target);
             const registrationRequest = {
                 firstName: formData.get('firstName'),
@@ -152,12 +139,10 @@
                 userRole: formData.get('userRole')
             };
 
-            // Validate required fields
             if (!validateForm(registrationRequest)) {
                 return;
             }
 
-            // Show loading state
             const submitBtn = document.getElementById('submitBtn');
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
@@ -176,11 +161,8 @@
 
                 if (response.ok) {
                     showSuccess(result.message);
-                    // Clear the form after successful registration
                     document.getElementById('signupForm').reset();
-                    // Clear any radio button selections
                     document.querySelectorAll('input[name="userRole"]').forEach(radio => radio.checked = false);
-                    // Clear any Bootstrap button-check states
                     document.querySelectorAll('.btn-check').forEach(btn => btn.checked = false);
                     document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
                 } else {
@@ -190,7 +172,6 @@
                 console.error('Registration error:', error);
                 showError('An error occurred during registration. Please try again.');
             } finally {
-                // Reset button state
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
@@ -199,7 +180,6 @@
         function validateForm(data) {
             let isValid = true;
 
-            // Check required fields
             if (!data.firstName || data.firstName.trim().length < 2) {
                 showFieldError('firstName', 'First name must be at least 2 characters');
                 isValid = false;
@@ -258,7 +238,6 @@
         }
 
         function clearErrors() {
-            // Clear field errors
             document.querySelectorAll('.is-invalid').forEach(field => {
                 field.classList.remove('is-invalid');
             });
@@ -267,10 +246,8 @@
                 feedback.textContent = '';
             });
 
-            // Clear role error
             document.getElementById('userRoleError').classList.add('d-none');
 
-            // Hide alert messages
             document.getElementById('successMessage').classList.add('d-none');
             document.getElementById('errorMessage').classList.add('d-none');
         }

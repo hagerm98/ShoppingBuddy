@@ -105,4 +105,24 @@ public class UIController {
 
         return "profile";
     }
+
+    @GetMapping("/shopping-requests")
+    public String shoppingRequests(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() ||
+            authentication.getPrincipal().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+
+        return "shopping-requests";
+    }
+
+    @GetMapping("/shopping-requests/create")
+    public String createShoppingRequest(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() ||
+            authentication.getPrincipal().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+
+        return "create-shopping-request";
+    }
 }

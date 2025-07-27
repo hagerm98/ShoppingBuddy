@@ -1,11 +1,90 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{layout/header :: head('ShoppingBuddy - Your Smart Shopping Companion')}"></head>
 <body>
     <nav th:replace="~{layout/header :: navbar('home')}"></nav>
 
     <div class="container mt-5">
-        <div class="row align-items-center">
+        <!-- Content for logged-in customers -->
+        <div sec:authorize="hasAuthority('CUSTOMER')" class="row align-items-center">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold text-primary mb-4">
+                    Welcome back, <span sec:authentication="principal.firstName"></span>!
+                </h1>
+                <p class="lead mb-5">
+                    Ready to get your shopping done? Whether you need groceries from your favorite local store or items from specialty shops, we've got you covered.
+                </p>
+
+                <div class="row g-4 mb-5">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-plus-circle fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Create New Request</h5>
+                                <p class="card-text">Start a new shopping request and get items delivered from any local store.</p>
+                                <a href="/shopping-requests/create" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-shopping-cart me-2"></i>New Request
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-history fa-3x text-success mb-3"></i>
+                                <h5 class="card-title">My Requests</h5>
+                                <p class="card-text">View and manage your current and past shopping requests.</p>
+                                <a href="/shopping-requests" class="btn btn-success btn-lg">
+                                    <i class="fas fa-list me-2"></i>View Requests
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content for logged-in shoppers -->
+        <div sec:authorize="hasAuthority('SHOPPER')" class="row align-items-center">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold text-primary mb-4">
+                    Welcome back, <span sec:authentication="principal.firstName"></span>!
+                </h1>
+                <p class="lead mb-5">
+                    Ready to help your community and earn money? Check out available shopping requests and start earning today.
+                </p>
+
+                <div class="row g-4 mb-5">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-search fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Browse Requests</h5>
+                                <p class="card-text">Find shopping requests in your area and start earning.</p>
+                                <a href="/shopping-requests/browse" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-search me-2"></i>Browse Now
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-tasks fa-3x text-success mb-3"></i>
+                                <h5 class="card-title">My Tasks</h5>
+                                <p class="card-text">View and manage your accepted shopping requests.</p>
+                                <a href="/shopping-requests/my-tasks" class="btn btn-success btn-lg">
+                                    <i class="fas fa-clipboard-list me-2"></i>My Tasks
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content for anonymous users -->
+        <div sec:authorize="!isAuthenticated()" class="row align-items-center">
             <div class="col-lg-6">
                 <h1 class="display-4 fw-bold text-primary mb-4">Welcome to ShoppingBuddy</h1>
                 <p class="lead mb-4">
@@ -24,7 +103,6 @@
         </div>
     </div>
 
-    <!-- Features Section -->
     <div class="container my-5">
         <div class="row text-center">
             <div class="col-md-4 mb-4">

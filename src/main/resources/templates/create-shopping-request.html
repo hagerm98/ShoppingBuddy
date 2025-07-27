@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/header :: head('Create Shopping Request - ShoppingBuddy')}"></head>
+<body>
+    <nav th:replace="~{layout/header :: navbar('create-shopping-request')}"></nav>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="display-5 fw-bold text-primary">
+                        <i class="fas fa-plus-circle me-2"></i>Create Shopping Request
+                    </h1>
+                    <a href="/shopping-requests" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to My Requests
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-shopping-list me-2"></i>Request Details
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="alertContainer"></div>
+
+                        <form id="shoppingRequestForm">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Shopping Items *</label>
+                                <div id="itemsContainer">
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addItem()">
+                                    <i class="fas fa-plus me-1"></i>Add Item
+                                </button>
+                                <div class="invalid-feedback" id="itemsError"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="deliveryAddress" class="form-label">Delivery Address *</label>
+                                <textarea class="form-control" id="deliveryAddress" name="deliveryAddress"
+                                         rows="3" required maxlength="500"
+                                         placeholder="Enter your complete delivery address..."></textarea>
+                                <div class="invalid-feedback"></div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="estimatedItemsPrice" class="form-label">Estimated Items Price (€) *</label>
+                                    <input type="number" class="form-control" id="estimatedItemsPrice"
+                                           name="estimatedItemsPrice" step="0.01" min="0.01" required
+                                           placeholder="0.00">
+                                    <div class="form-text">Approximate total cost of all items</div>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="deliveryFee" class="form-label">Delivery Fee (€) *</label>
+                                    <input type="number" class="form-control" id="deliveryFee"
+                                           name="deliveryFee" step="0.01" min="8.00" value="8.00" required>
+                                    <div class="form-text">Minimum €8.00 delivery fee</div>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+
+                            <div class="card bg-light mb-4">
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-md-4">
+                                            <strong>Items Cost</strong>
+                                            <div class="h5 text-primary" id="itemsCostDisplay">€0.00</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Delivery Fee</strong>
+                                            <div class="h5 text-info" id="deliveryFeeDisplay">€8.00</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Total Amount</strong>
+                                            <div class="h4 text-success" id="totalAmountDisplay">€8.00</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="fas fa-paper-plane me-2"></i>Create Request
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">How It Works</h5>
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0">
+                                <span class="badge bg-primary rounded-pill">1</span>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Add Items</strong>
+                                <p class="small text-muted mb-0">List all items you need with descriptions and quantities.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0">
+                                <span class="badge bg-primary rounded-pill">2</span>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Set Price & Address</strong>
+                                <p class="small text-muted mb-0">Estimate the total cost and provide your delivery address.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0">
+                                <span class="badge bg-primary rounded-pill">3</span>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Shopper Accepts</strong>
+                                <p class="small text-muted mb-0">A nearby shopper will accept your request and start shopping.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <span class="badge bg-success rounded-pill">4</span>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Get Delivery</strong>
+                                <p class="small text-muted mb-0">Your items will be delivered to your specified address.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Tips for Success</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Be specific with item descriptions
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Include brand preferences if any
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Provide accurate quantity estimates
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Include complete delivery address
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+    <script th:replace="~{layout/footer :: scripts}"></script>
+
+    <script th:inline="javascript">
+        let nextItemId = 1;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            addItem();
+
+            document.getElementById('estimatedItemsPrice').addEventListener('input', updateTotals);
+            document.getElementById('deliveryFee').addEventListener('input', updateTotals);
+        });
+
+        function addItem() {
+            const container = document.getElementById('itemsContainer');
+            const currentItemCount = container.children.length;
+            const newItemNumber = currentItemCount + 1;
+            const uniqueId = nextItemId++;
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'border rounded p-3 mb-3';
+            itemDiv.id = `item-${uniqueId}`;
+
+            itemDiv.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">Item ${newItemNumber}</h6>
+                    <button type="button" class="btn btn-outline-danger btn-sm item-remove-btn" onclick="removeItem('item-${uniqueId}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">Item Name *</label>
+                        <input type="text" class="form-control" name="items[${currentItemCount}].name" required maxlength="100"
+                               placeholder="e.g. Organic Bananas">
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label">Amount *</label>
+                        <input type="number" class="form-control" name="items[${currentItemCount}].amount" min="1" value="1" required>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" name="items[${currentItemCount}].category">
+                            <option value="">Select category</option>
+                            <option value="Fresh Produce">Fresh Produce</option>
+                            <option value="Dairy & Eggs">Dairy & Eggs</option>
+                            <option value="Meat & Seafood">Meat & Seafood</option>
+                            <option value="Bakery">Bakery</option>
+                            <option value="Pantry">Pantry</option>
+                            <option value="Frozen">Frozen</option>
+                            <option value="Beverages">Beverages</option>
+                            <option value="Health & Beauty">Health & Beauty</option>
+                            <option value="Household">Household</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-12 mb-2">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="items[${currentItemCount}].description" rows="2" maxlength="500"
+                                  placeholder="Additional details, brand preferences, size specifications..."></textarea>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(itemDiv);
+            updateRemoveButtonsState();
+        }
+
+        function removeItem(itemDivId) {
+            const itemDiv = document.getElementById(itemDivId);
+            if (itemDiv) {
+                itemDiv.remove();
+                renumberItems();
+                updateRemoveButtonsState();
+            }
+        }
+
+        function updateRemoveButtonsState() {
+            const container = document.getElementById('itemsContainer');
+            const items = container.children;
+            const removeButtons = container.querySelectorAll('.item-remove-btn');
+
+            const showButtons = items.length > 1;
+
+            removeButtons.forEach(btn => {
+                btn.style.display = showButtons ? 'inline-block' : 'none';
+            });
+        }
+
+        function renumberItems() {
+            const container = document.getElementById('itemsContainer');
+            const items = container.children;
+
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const newItemNumber = i + 1;
+
+                const title = item.querySelector('h6');
+                if (title) {
+                    title.textContent = `Item ${newItemNumber}`;
+                }
+
+                const inputs = item.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => {
+                    const name = input.name;
+                    if (name && name.startsWith('items[')) {
+                        const dotIndex = name.indexOf('.');
+                        if (dotIndex !== -1) {
+                            const fieldPart = name.substring(dotIndex);
+                            input.name = `items[${i}]${fieldPart}`;
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateTotals() {
+            const itemsPrice = parseFloat(document.getElementById('estimatedItemsPrice').value) || 0;
+            const deliveryFee = parseFloat(document.getElementById('deliveryFee').value) || 0;
+            const total = itemsPrice + deliveryFee;
+
+            document.getElementById('itemsCostDisplay').textContent = `€${itemsPrice.toFixed(2)}`;
+            document.getElementById('deliveryFeeDisplay').textContent = `€${deliveryFee.toFixed(2)}`;
+            document.getElementById('totalAmountDisplay').textContent = `€${total.toFixed(2)}`;
+        }
+
+        document.getElementById('shoppingRequestForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await handleFormSubmit();
+        });
+
+        async function handleFormSubmit() {
+            const submitBtn = document.getElementById('submitBtn');
+            const alertContainer = document.getElementById('alertContainer');
+
+            alertContainer.innerHTML = '';
+            clearFormErrors();
+
+            const itemsContainer = document.getElementById('itemsContainer');
+            if (itemsContainer.children.length === 0) {
+                showAlert('danger', 'Please add at least one item to your shopping request.');
+                return;
+            }
+
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Creating...';
+            submitBtn.disabled = true;
+
+            try {
+                const formData = new FormData(document.getElementById('shoppingRequestForm'));
+
+                const deliveryAddressValue = formData.get('deliveryAddress');
+                const estimatedItemsPriceValue = formData.get('estimatedItemsPrice');
+                const deliveryFeeValue = formData.get('deliveryFee');
+
+                const requestData = {
+                    items: [],
+                    deliveryAddress: deliveryAddressValue ? deliveryAddressValue.toString() : '',
+                    estimatedItemsPrice: estimatedItemsPriceValue ? parseFloat(estimatedItemsPriceValue.toString()) : 0,
+                    deliveryFee: deliveryFeeValue ? parseFloat(deliveryFeeValue.toString()) : 0
+                };
+
+                const itemsData = {};
+                for (let [key, value] of formData.entries()) {
+                    if (key.startsWith('items[')) {
+                        const openBracketIndex = key.indexOf('[');
+                        const closeBracketIndex = key.indexOf(']');
+                        const dotIndex = key.indexOf('.');
+
+                        if (openBracketIndex !== -1 && closeBracketIndex > openBracketIndex && dotIndex > closeBracketIndex) {
+                            const indexStr = key.substring(openBracketIndex + 1, closeBracketIndex);
+                            const index = parseInt(indexStr, 10);
+                            const field = key.substring(dotIndex + 1);
+
+                            if (!isNaN(index)) {
+                                if (!itemsData[index]) {
+                                    itemsData[index] = {};
+                                }
+                                itemsData[index][field] = value ? value.toString() : '';
+                            }
+                        }
+                    }
+                }
+
+                requestData.items = Object.values(itemsData).filter(item =>
+                    item.name && item.name.trim() !== ''
+                );
+
+                const response = await fetch('/api/shopping-requests', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert('success', `Shopping request created successfully! Request ID: ${result.id}`);
+
+                    setTimeout(() => {
+                        window.location.href = '/shopping-requests';
+                    }, 2000);
+                } else {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const validationErrors = await response.json();
+                        displayValidationErrors(validationErrors);
+                        showAlert('danger', 'Please correct the errors below and try again.');
+                    } else {
+                        const errorMessage = await response.text();
+                        showAlert('danger', errorMessage);
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('danger', 'An error occurred while creating the request. Please try again.');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        function displayValidationErrors(errors) {
+            Object.keys(errors).forEach(fieldName => {
+                const field = document.querySelector(`[name="${fieldName}"]`);
+                if (field) {
+                    field.classList.add('is-invalid');
+                    const feedback = field.nextElementSibling;
+                    if (feedback && feedback.classList.contains('invalid-feedback')) {
+                        feedback.textContent = errors[fieldName];
+                    }
+                }
+            });
+        }
+
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    <i class="fas ${iconClass} me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+
+            alertContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function clearFormErrors() {
+            document.querySelectorAll('.is-invalid').forEach(field => {
+                field.classList.remove('is-invalid');
+            });
+            document.querySelectorAll('.invalid-feedback').forEach(feedback => {
+                feedback.textContent = '';
+            });
+        }
+    </script>
+</body>
+</html>

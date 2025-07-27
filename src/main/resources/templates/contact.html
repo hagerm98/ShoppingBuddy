@@ -108,18 +108,14 @@
             const spinner = submitBtn.querySelector('.spinner-border');
             const alertContainer = document.getElementById('alertContainer');
 
-            // Clear previous alerts
             alertContainer.innerHTML = '';
 
-            // Clear previous validation errors
             document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 
-            // Show loading state
             spinner.classList.remove('d-none');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...';
 
-            // Prepare form data
             const formData = {
                 name: document.getElementById('name').value.trim(),
                 email: document.getElementById('email').value.trim(),
@@ -139,17 +135,14 @@
                 const result = await response.text();
 
                 if (response.ok) {
-                    // Success
                     alertContainer.innerHTML = `
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="bi bi-check-circle-fill"></i> ${result}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     `;
-                    // Reset form
                     document.getElementById('contactForm').reset();
                 } else {
-                    // Error
                     alertContainer.innerHTML = `
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <i class="bi bi-exclamation-triangle-fill"></i> ${result}
@@ -166,7 +159,6 @@
                     </div>
                 `;
             } finally {
-                // Reset button state
                 spinner.classList.add('d-none');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'Send Message';

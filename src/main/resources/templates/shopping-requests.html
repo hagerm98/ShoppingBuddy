@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/header :: head('My Shopping Requests - ShoppingBuddy')}"></head>
+<body>
+    <nav th:replace="~{layout/header :: navbar('shopping-requests')}"></nav>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="display-5 fw-bold text-primary">
+                        <i class="fas fa-shopping-bag me-2"></i>My Shopping Requests
+                    </h1>
+                    <a href="/shopping-requests/create" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>New Request
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div id="loadingSpinner" class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading your shopping requests...</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div id="requestsContainer" class="row">
+        </div>
+
+        <div id="emptyState" class="text-center my-5" style="display: none;">
+            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+            <h3 class="text-muted">No Shopping Requests Yet</h3>
+            <p class="lead text-muted mb-4">You haven't created any shopping requests yet.</p>
+            <a href="/shopping-requests/create" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus me-2"></i>Create Your First Request
+            </a>
+        </div>
+    </div>
+
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+    <script th:replace="~{layout/footer :: scripts}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadShoppingRequests();
+        });
+
+        async function loadShoppingRequests() {
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const emptyState = document.getElementById('emptyState');
+
+            try {
+                const response = await fetch('/api/shopping-requests/customer/my-requests', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    const requests = await response.json();
+                    loadingSpinner.style.display = 'none';
+
+                    if (requests.length === 0) {
+                        emptyState.style.display = 'block';
+                    } else {
+                        displayRequests(requests);
+                    }
+                } else {
+                    throw new Error('Failed to load shopping requests');
+                }
+            } catch (error) {
+                console.error('Error loading shopping requests:', error);
+                loadingSpinner.style.display = 'none';
+                showAlert('danger', 'Failed to load shopping requests. Please refresh the page to try again.');
+            }
+        }
+
+        function displayRequests(requests) {
+            const container = document.getElementById('requestsContainer');
+            container.innerHTML = '';
+
+            requests.forEach(request => {
+                const requestCard = createRequestCard(request);
+                container.appendChild(requestCard);
+            });
+        }
+
+        function createRequestCard(request) {
+            const col = document.createElement('div');
+            col.className = 'col-lg-6 col-xl-4 mb-4';
+
+            const statusBadgeClass = getStatusBadgeClass(request.status);
+            const formattedDate = formatDate(request.createdAt);
+            const totalAmount = (request.estimatedItemsPrice + request.deliveryFee).toFixed(2);
+
+            col.innerHTML = `
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Request #${request.id}</h6>
+                        <span class="badge ${statusBadgeClass}">${request.status}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <strong>Items:</strong> ${request.items.length} item(s)
+                        </div>
+                        <div class="mb-2">
+                            <strong>Total:</strong> €${totalAmount}
+                        </div>
+                        <div class="mb-2">
+                            <strong>Created:</strong> ${formattedDate}
+                        </div>
+                        ${request.shopperName ? `<div class="mb-2"><strong>Shopper:</strong> ${request.shopperName}</div>` : ''}
+                        <div class="mb-3">
+                            <strong>Delivery Address:</strong>
+                            <p class="text-muted small mb-0">${request.deliveryAddress}</p>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-outline-primary btn-sm" onclick="viewRequestDetails(${request.id})">
+                            <i class="fas fa-eye me-1"></i>View Details
+                        </button>
+                        ${request.status === 'PENDING' ? `
+                            <button class="btn btn-outline-danger btn-sm ms-2" onclick="cancelRequest(${request.id})">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            return col;
+        }
+
+        function getStatusBadgeClass(status) {
+            switch (status) {
+                case 'PENDING': return 'bg-warning text-dark';
+                case 'ACCEPTED': return 'bg-info';
+                case 'IN_PROGRESS': return 'bg-primary';
+                case 'COMPLETED': return 'bg-success';
+                case 'CANCELLED': return 'bg-secondary';
+                default: return 'bg-secondary';
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function viewRequestDetails(requestId) {
+            // TODO: I will link here the specific single request details view
+            console.log('View details for request:', requestId);
+        }
+
+        async function cancelRequest(requestId) {
+            if (!confirm('Are you sure you want to cancel this shopping request?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/shopping-requests/${requestId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    showAlert('success', 'Shopping request cancelled successfully.');
+                    await loadShoppingRequests(); // Reload the requests
+                } else {
+                    const errorMessage = await response.text();
+                    showAlert('danger', errorMessage);
+                }
+            } catch (error) {
+                console.error('Error cancelling request:', error);
+                showAlert('danger', 'An error occurred while cancelling the request. Please try again.');
+            }
+        }
+
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    <i class="fas ${iconClass} me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+
+            alertContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

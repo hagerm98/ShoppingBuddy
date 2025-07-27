@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{layout/header :: head('About Us - ShoppingBuddy')}"></head>
 <body>
     <nav th:replace="~{layout/header :: navbar('about')}"></nav>
@@ -87,7 +87,15 @@
                         <p class="card-text">
                             Join thousands of smart shoppers who are already saving time and money with ShoppingBuddy.
                         </p>
-                        <a href="/signup" class="btn btn-primary btn-lg w-100 mb-2">Sign Up Now</a>
+                        <div sec:authorize="!isAuthenticated()">
+                            <a href="/signup" class="btn btn-primary btn-lg w-100 mb-2">Sign Up Now</a>
+                        </div>
+                        <div sec:authorize="hasAuthority('CUSTOMER')">
+                            <a href="/shopping-requests/create" class="btn btn-primary btn-lg w-100 mb-2">Create a New Shopping Request</a>
+                        </div>
+                        <div sec:authorize="hasAuthority('SHOPPER')">
+                            <a href="//TODO" class="btn btn-primary btn-lg w-100 mb-2">View Available Shopping Requests</a>
+                        </div>
                         <a href="/contact" class="btn btn-outline-primary w-100">Contact Us</a>
                     </div>
                 </div>

@@ -19,7 +19,7 @@ public class UIController {
 
     @GetMapping("/home")
     public String homePage() {
-        return "home";
+        return "redirect:/";
     }
 
     @GetMapping("/about")
@@ -33,7 +33,10 @@ public class UIController {
     }
 
     @GetMapping("/signup")
-    public String signup() {
+    public String signup(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            return "redirect:/";
+        }
         return "signup";
     }
 

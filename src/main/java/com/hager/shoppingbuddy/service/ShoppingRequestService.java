@@ -23,7 +23,8 @@ public class ShoppingRequestService {
     private final ShopperRepository shopperRepository;
 
     @Transactional
-    public ShoppingRequestResponse createShoppingRequest(String customerEmail, ShoppingRequestCreateRequest request) throws CustomerNotFoundException {
+    public ShoppingRequestResponse createShoppingRequest(String customerEmail, ShoppingRequestCreateRequest request)
+            throws CustomerNotFoundException {
         log.info("Creating shopping request for customer: {}", customerEmail);
         
         Customer customer = customerRepository.findByUserEmail(customerEmail)
@@ -48,7 +49,7 @@ public class ShoppingRequestService {
                         .amount(itemRequest.getAmount())
                         .category(itemRequest.getCategory())
                         .build();
-                    item.setShoppingRequest(shoppingRequest); // Set the parent
+                    item.setShoppingRequest(shoppingRequest);
                     return item;
                 })
                 .collect(Collectors.toList());
@@ -69,7 +70,7 @@ public class ShoppingRequestService {
                 .collect(Collectors.toList());
     }
 
-    public ShoppingRequestResponse getShoppingRequestById(Long requestId) {
+    public ShoppingRequestResponse getShoppingRequestById(Long requestId) throws ShoppingRequestNotFoundException {
         log.info("Retrieving shopping request with ID: {}", requestId);
         ShoppingRequest request = shoppingRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ShoppingRequestNotFoundException("Shopping request not found with ID: " + requestId));
@@ -99,7 +100,8 @@ public class ShoppingRequestService {
     }
 
     @Transactional
-    public ShoppingRequestResponse acceptShoppingRequest(Long requestId, String shopperEmail) throws ShopperNotFoundException, InvalidShoppingRequestActionException {
+    public ShoppingRequestResponse acceptShoppingRequest(Long requestId, String shopperEmail)
+            throws ShopperNotFoundException, InvalidShoppingRequestActionException, ShoppingRequestNotFoundException {
         log.info("Shopper {} accepting shopping request: {}", shopperEmail, requestId);
 
         Shopper shopper = shopperRepository.findByUserEmail(shopperEmail)
@@ -122,7 +124,8 @@ public class ShoppingRequestService {
     }
 
     @Transactional
-    public ShoppingRequestResponse startShopping(Long requestId, String shopperEmail) throws InvalidShoppingRequestActionException, ShopperNotFoundException {
+    public ShoppingRequestResponse startShopping(Long requestId, String shopperEmail)
+            throws InvalidShoppingRequestActionException, ShopperNotFoundException, ShoppingRequestNotFoundException {
         log.info("Shopper {} starting shopping for request: {}", shopperEmail, requestId);
 
         ShoppingRequest request = shoppingRequestRepository.findByIdAndShopperId(requestId, getShopperIdByEmail(shopperEmail))
@@ -141,7 +144,8 @@ public class ShoppingRequestService {
     }
 
     @Transactional
-    public ShoppingRequestResponse completeShopping(Long requestId, String shopperEmail) throws InvalidShoppingRequestActionException, ShopperNotFoundException {
+    public ShoppingRequestResponse completeShopping(Long requestId, String shopperEmail)
+            throws InvalidShoppingRequestActionException, ShopperNotFoundException, ShoppingRequestNotFoundException {
         log.info("Completing shopping for request: {} by shopper: {}", shopperEmail, requestId);
         
         ShoppingRequest request = shoppingRequestRepository.findByIdAndShopperId(requestId, getShopperIdByEmail(shopperEmail))
@@ -160,7 +164,8 @@ public class ShoppingRequestService {
     }
 
     @Transactional
-    public ShoppingRequestResponse cancelShoppingRequest(Long requestId, String userEmail) throws InvalidShoppingRequestActionException {
+    public ShoppingRequestResponse cancelShoppingRequest(Long requestId, String userEmail)
+            throws InvalidShoppingRequestActionException, ShoppingRequestNotFoundException {
         log.info("Cancelling shopping request: {} by user: {}", requestId, userEmail);
 
         ShoppingRequest request = shoppingRequestRepository.findById(requestId)

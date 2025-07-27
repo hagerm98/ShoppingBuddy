@@ -2,10 +2,7 @@ package com.hager.shoppingbuddy.controller;
 
 import com.hager.shoppingbuddy.dto.*;
 import com.hager.shoppingbuddy.entity.UserRole;
-import com.hager.shoppingbuddy.exception.CustomerNotFoundException;
-import com.hager.shoppingbuddy.exception.InvalidShoppingRequestActionException;
-import com.hager.shoppingbuddy.exception.ShopperNotFoundException;
-import com.hager.shoppingbuddy.exception.UnauthorizedRoleException;
+import com.hager.shoppingbuddy.exception.*;
 import com.hager.shoppingbuddy.service.ShoppingRequestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +48,8 @@ public class ShoppingRequestController {
     }
 
     @GetMapping("/{requestId}")
-    public ResponseEntity<ShoppingRequestResponse> getShoppingRequestById(@PathVariable Long requestId) {
+    public ResponseEntity<ShoppingRequestResponse> getShoppingRequestById(@PathVariable Long requestId)
+            throws ShoppingRequestNotFoundException {
         log.info("Retrieving shopping request with ID: {}", requestId);
 
         ShoppingRequestResponse response = shoppingRequestService.getShoppingRequestById(requestId);
@@ -91,7 +89,8 @@ public class ShoppingRequestController {
     public ResponseEntity<ShoppingRequestResponse> acceptShoppingRequest(
             @PathVariable Long requestId,
             Authentication authentication
-    ) throws ShopperNotFoundException, InvalidShoppingRequestActionException, UnauthorizedRoleException {
+    ) throws ShopperNotFoundException, InvalidShoppingRequestActionException,
+            UnauthorizedRoleException, ShoppingRequestNotFoundException {
 
         verifyUserRole(authentication, UserRole.SHOPPER);
         log.info("Accepting shopping request {} by shopper: {}", requestId, authentication.getName());
@@ -106,7 +105,8 @@ public class ShoppingRequestController {
     public ResponseEntity<ShoppingRequestResponse> startShopping(
             @PathVariable Long requestId,
             Authentication authentication
-    ) throws ShopperNotFoundException, InvalidShoppingRequestActionException, UnauthorizedRoleException {
+    ) throws ShopperNotFoundException, InvalidShoppingRequestActionException,
+            UnauthorizedRoleException, ShoppingRequestNotFoundException {
 
         verifyUserRole(authentication, UserRole.SHOPPER);
         log.info("Starting shopping for request {} by shopper: {}", requestId, authentication.getName());
@@ -121,7 +121,8 @@ public class ShoppingRequestController {
     public ResponseEntity<ShoppingRequestResponse> completeShopping(
             @PathVariable Long requestId,
             Authentication authentication
-    ) throws ShopperNotFoundException, InvalidShoppingRequestActionException, UnauthorizedRoleException {
+    ) throws ShopperNotFoundException, InvalidShoppingRequestActionException,
+            UnauthorizedRoleException, ShoppingRequestNotFoundException {
 
         verifyUserRole(authentication, UserRole.SHOPPER);
         log.info("Completing shopping for request {} by shopper: {}", requestId, authentication.getName());
@@ -136,7 +137,7 @@ public class ShoppingRequestController {
     public ResponseEntity<ShoppingRequestResponse> cancelShoppingRequest(
             @PathVariable Long requestId,
             Authentication authentication
-    ) throws InvalidShoppingRequestActionException {
+    ) throws InvalidShoppingRequestActionException, ShoppingRequestNotFoundException {
 
         log.info("Cancelling shopping request {} by user: {}", requestId, authentication.getName());
 

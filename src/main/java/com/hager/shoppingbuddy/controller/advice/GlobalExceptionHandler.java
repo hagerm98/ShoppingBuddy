@@ -55,6 +55,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
+    @ExceptionHandler(ChatMessageNotFoundException.class)
+    public ResponseEntity<String> handleChatMessageNotFoundException(ChatMessageNotFoundException ex) {
+        log.error("ChatMessageNotFoundException: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
     @ExceptionHandler(UnauthorizedRoleException.class)
     public ResponseEntity<String> handleUnauthorizedRoleException(UnauthorizedRoleException ex) {
         log.error("UnauthorizedRoleException: {}", ex.getMessage());

@@ -15,11 +15,11 @@ import lombok.NoArgsConstructor;
 public class Shopper {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "shopper_id_seq")
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id", referencedColumnName = "id")
-    @MapsId("id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
 }

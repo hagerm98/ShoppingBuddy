@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -207,6 +208,12 @@ public class ShoppingRequestService {
     }
 
     private ShoppingRequest populateShoppingRequestItems(ShoppingRequest shoppingRequest, List<ItemRequest> itemRequests) {
+        if (shoppingRequest.getItems() != null) {
+            shoppingRequest.getItems().clear();
+        } else {
+            shoppingRequest.setItems(new ArrayList<>());
+        }
+
         List<Item> newItems = itemRequests.stream()
                 .map(itemRequest -> {
                     Item item = Item.builder()
@@ -218,9 +225,9 @@ public class ShoppingRequestService {
                     item.setShoppingRequest(shoppingRequest);
                     return item;
                 })
-                .collect(Collectors.toList());
+                .toList();
 
-        shoppingRequest.setItems(newItems);
+        shoppingRequest.getItems().addAll(newItems);
 
         return shoppingRequestRepository.save(shoppingRequest);
     }

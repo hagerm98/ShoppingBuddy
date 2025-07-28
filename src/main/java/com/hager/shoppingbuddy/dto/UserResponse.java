@@ -13,6 +13,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @Builder
 public class UserResponse {
+    private Long id;
     private String firstName;
     private String lastName;
     private String email;
@@ -24,6 +25,7 @@ public class UserResponse {
 
     public static UserResponse fromUser(User user) {
         return UserResponse.builder()
+                .id(user.getId())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .email(user.getEmail())

@@ -128,4 +128,14 @@ public class UIController {
 
         return "create-shopping-request";
     }
+
+    @GetMapping("/shopping-requests/{*}")
+    public String shoppingRequestDetails(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() ||
+            authentication.getPrincipal().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+
+        return "shopping-request-details";
+    }
 }

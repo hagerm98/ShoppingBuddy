@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/header :: head('Shopping Request Details - ShoppingBuddy')}"></head>
+<body>
+    <nav th:replace="~{layout/header :: navbar('shopping-requests')}"></nav>
+
+    <div class="container mt-5">
+        <div id="loadingSpinner" class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading shopping request details...</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div id="requestDetailsContainer" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <a href="/shopping-requests" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to My Requests
+                    </a>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h2 class="mb-0">
+                                <i class="fas fa-shopping-bag me-2"></i>
+                                Shopping Request #<span id="requestId"></span>
+                            </h2>
+                            <span id="statusBadge" class="badge fs-6"></span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Customer:</strong> <span id="customerName"></span></p>
+                                    <p><strong>Created:</strong> <span id="createdDate"></span></p>
+                                    <p id="shopperInfo" style="display: none;">
+                                        <strong>Shopper:</strong> <span id="shopperName"></span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Total Amount:</strong> €<span id="totalAmount"></span></p>
+                                    <p><strong>Payment Status:</strong> <span id="paymentStatus"></span></p>
+                                    <p><strong>Last Updated:</strong> <span id="updatedDate"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div id="actionButtons" class="d-flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list me-2"></i>Shopping Items
+                            </h5>
+                            <button id="editItemsBtn" class="btn btn-sm btn-outline-primary" style="display: none;">
+                                <i class="fas fa-edit me-1"></i>Edit Items
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="itemsList"></div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <p><strong>Estimated Items Price:</strong> €<span id="estimatedPrice"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Delivery Fee:</strong> €<span id="deliveryFee"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-map-marker-alt me-2"></i>Delivery Address
+                            </h5>
+                            <button id="editAddressBtn" class="btn btn-sm btn-outline-primary" style="display: none;">
+                                <i class="fas fa-edit me-1"></i>Edit Address
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <p id="deliveryAddress" class="mb-0"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-comments me-2"></i>Chat
+                            </h5>
+                        </div>
+                        <div class="card-body p-0 d-flex flex-column">
+                            <div id="chatMessages" class="flex-grow-1 p-3" style="height: 400px; overflow-y: auto; border-bottom: 1px solid #dee2e6;">
+                                <div id="chatLoading" class="text-center text-muted">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2 mb-0">Loading messages...</p>
+                                </div>
+                                <div id="noChatMessages" class="text-center text-muted" style="display: none;">
+                                    <i class="fas fa-comment-slash fa-2x mb-2"></i>
+                                    <p class="mb-0">No messages yet. Start the conversation!</p>
+                                </div>
+                            </div>
+                            <div class="p-3">
+                                <div class="input-group">
+                                    <input type="text" id="messageInput" class="form-control"
+                                           placeholder="Type your message..." maxlength="1000">
+                                    <button id="sendMessageBtn" class="btn btn-primary" type="button">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editItemsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Shopping Items</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="editItemsContainer"></div>
+                    <button type="button" class="btn btn-outline-primary mt-2" onclick="addEditItem()">
+                        <i class="fas fa-plus me-1"></i>Add Item
+                    </button>
+
+                    <!-- Pricing Section -->
+                    <div class="border-top mt-4 pt-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-euro-sign me-2"></i>Pricing Details
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editEstimatedItemsPrice" class="form-label">Estimated Items Price (€) *</label>
+                                <input type="number" class="form-control" id="editEstimatedItemsPrice"
+                                       step="0.01" min="0.01" required placeholder="0.00">
+                                <div class="form-text">Approximate total cost of all items</div>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editDeliveryFee" class="form-label">Delivery Fee (€) *</label>
+                                <input type="number" class="form-control" id="editDeliveryFee"
+                                       step="0.01" min="8.00" required>
+                                <div class="form-text">Minimum €8.00 delivery fee</div>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+
+                        <!-- Total Display -->
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-4">
+                                        <strong>Items Cost</strong>
+                                        <div class="h5 text-primary" id="editItemsCostDisplay">€0.00</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Delivery Fee</strong>
+                                        <div class="h5 text-info" id="editDeliveryFeeDisplay">€8.00</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Total Amount</strong>
+                                        <div class="h4 text-success" id="editTotalAmountDisplay">€8.00</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveItemsChanges()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editAddressModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Delivery Address</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editDeliveryAddress" class="form-label">Delivery Address</label>
+                        <textarea id="editDeliveryAddress" class="form-control" rows="3"
+                                  placeholder="Enter complete delivery address"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAddressChanges()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+    <script th:replace="~{layout/footer :: scripts}"></script>
+
+    <script>
+        let currentRequest = null;
+        let currentUser = null;
+        let requestId = null;
+        let chatRefreshInterval = null;
+        let editItemCounter = 0;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            requestId = extractRequestIdFromUrl();
+            if (requestId) {
+                await loadRequestDetails();
+                await loadChatMessages();
+                startChatRefresh();
+            } else {
+                showAlert('danger', 'Invalid request ID');
+            }
+
+            setupChatEventListeners();
+        });
+
+        function extractRequestIdFromUrl() {
+            const pathParts = window.location.pathname.split('/');
+            return pathParts[pathParts.length - 1];
+        }
+
+        async function loadRequestDetails() {
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const requestDetailsContainer = document.getElementById('requestDetailsContainer');
+
+            try {
+                const response = await fetch(`/api/shopping-requests/${requestId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    currentRequest = await response.json();
+                    await loadCurrentUser();
+
+                    loadingSpinner.style.display = 'none';
+                    requestDetailsContainer.style.display = 'block';
+                    displayRequestDetails(currentRequest);
+                    setupActionButtons();
+                    setupEditButtonListeners();
+                } else {
+                    throw new Error('Failed to load request details');
+                }
+            } catch (error) {
+                console.error('Error loading request details:', error);
+                loadingSpinner.style.display = 'none';
+                showAlert('danger', 'Failed to load request details. Please try again.');
+            }
+        }
+
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/api/user', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    currentUser = await response.json();
+                }
+            } catch (error) {
+                console.error('Error loading current user:', error);
+            }
+        }
+
+        function displayRequestDetails(request) {
+            document.getElementById('requestId').textContent = request.id;
+            document.getElementById('customerName').textContent = request.customerName;
+            document.getElementById('createdDate').textContent = formatDate(request.createdAt);
+            document.getElementById('updatedDate').textContent = formatDate(request.updatedAt);
+            document.getElementById('totalAmount').textContent = (request.estimatedItemsPrice + request.deliveryFee).toFixed(2);
+            document.getElementById('paymentStatus').textContent = request.paymentStatus || 'PENDING';
+            document.getElementById('estimatedPrice').textContent = request.estimatedItemsPrice.toFixed(2);
+            document.getElementById('deliveryFee').textContent = request.deliveryFee.toFixed(2);
+            document.getElementById('deliveryAddress').textContent = request.deliveryAddress;
+
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.textContent = request.status;
+            statusBadge.className = `badge fs-6 ${getStatusBadgeClass(request.status)}`;
+
+            if (request.shopperName) {
+                document.getElementById('shopperInfo').style.display = 'block';
+                document.getElementById('shopperName').textContent = request.shopperName;
+            }
+
+            displayItems(request.items);
+        }
+
+        function displayItems(items) {
+            const itemsList = document.getElementById('itemsList');
+            itemsList.innerHTML = '';
+
+            items.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'border-bottom pb-2 mb-2';
+                itemDiv.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">${item.name || 'Unnamed Item'}</h6>
+                            ${item.description ? `<p class="text-muted small mb-1">${item.description}</p>` : ''}
+                            ${item.category ? `<small class="text-muted">Category: ${item.category}</small>` : ''}
+                        </div>
+                        <span class="badge bg-primary">Amount: ${item.amount || 0}</span>
+                    </div>
+                `;
+                itemsList.appendChild(itemDiv);
+            });
+        }
+
+        function setupActionButtons() {
+            const actionButtons = document.getElementById('actionButtons');
+            actionButtons.innerHTML = '';
+
+            if (!currentUser) {
+                return;
+            }
+
+            const isCustomer = currentUser.role === 'CUSTOMER';
+            const isShopper = currentUser.role === 'SHOPPER';
+            const isOwner = isCustomer && currentRequest.customerId === currentUser.id;
+            const isAssignedShopper = isShopper && currentRequest.shopperId === currentUser.id;
+
+            if (isOwner) {
+                if (currentRequest.status === 'PENDING') {
+                    actionButtons.appendChild(createActionButton('Cancel Request', 'btn-danger', 'fas fa-times', () => cancelRequest()));
+                    document.getElementById('editItemsBtn').style.display = 'inline-block';
+                    document.getElementById('editAddressBtn').style.display = 'inline-block';
+                }
+            }
+
+            if (isShopper) {
+                if (currentRequest.status === 'PENDING' && !currentRequest.shopperId) {
+                    actionButtons.appendChild(createActionButton('Accept Request', 'btn-success', 'fas fa-check', () => acceptRequest()));
+                }
+
+                if (isAssignedShopper) {
+                    if (currentRequest.status === 'ACCEPTED') {
+                        actionButtons.appendChild(createActionButton('Start Shopping', 'btn-primary', 'fas fa-play', () => startShopping()));
+                    } else if (currentRequest.status === 'IN_PROGRESS') {
+                        actionButtons.appendChild(createActionButton('Complete Shopping', 'btn-success', 'fas fa-check-circle', () => completeShopping()));
+                    }
+                }
+            }
+        }
+
+        function setupEditButtonListeners() {
+            const editItemsBtn = document.getElementById('editItemsBtn');
+            const editAddressBtn = document.getElementById('editAddressBtn');
+
+            if (editItemsBtn) {
+                editItemsBtn.addEventListener('click', openEditItemsModal);
+            }
+            if (editAddressBtn) {
+                editAddressBtn.addEventListener('click', openEditAddressModal);
+            }
+        }
+
+        function createActionButton(text, className, iconClass, onClick) {
+            const button = document.createElement('button');
+            button.className = `btn ${className}`;
+            button.innerHTML = `<i class="${iconClass} me-2"></i>${text}`;
+            button.onclick = onClick;
+            return button;
+        }
+
+        async function cancelRequest() {
+            if (!confirm('Are you sure you want to cancel this shopping request?')) return;
+
+            try {
+                const response = await fetch(`/api/shopping-requests/${requestId}/cancel`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    showAlert('success', 'Request cancelled successfully.');
+                    await loadRequestDetails();
+                } else {
+                    const errorMessage = await response.text();
+                    showAlert('danger', errorMessage);
+                }
+            } catch (error) {
+                console.error('Error cancelling request:', error);
+                showAlert('danger', 'An error occurred while cancelling the request.');
+            }
+        }
+
+        async function acceptRequest() {
+            if (!confirm('Are you sure you want to accept this shopping request?')) return;
+
+            try {
+                const response = await fetch(`/api/shopping-requests/${requestId}/accept`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    showAlert('success', 'Request accepted successfully.');
+                    await loadRequestDetails();
+                } else {
+                    const errorMessage = await response.text();
+                    showAlert('danger', errorMessage);
+                }
+            } catch (error) {
+                console.error('Error accepting request:', error);
+                showAlert('danger', 'An error occurred while accepting the request.');
+            }
+        }
+
+        async function startShopping() {
+            if (!confirm('Are you ready to start shopping for this request?')) return;
+
+            try {
+                const response = await fetch(`/api/shopping-requests/${requestId}/start-shopping`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    showAlert('success', 'Shopping started successfully.');
+                    await loadRequestDetails();
+                } else {
+                    const errorMessage = await response.text();
+                    showAlert('danger', errorMessage);
+                }
+            } catch (error) {
+                console.error('Error starting shopping:', error);
+                showAlert('danger', 'An error occurred while starting shopping.');
+            }
+        }
+
+        async function completeShopping() {
+            if (!confirm('Have you completed the shopping and are ready to deliver?')) return;
+
+            try {
+                const response = await fetch(`/api/shopping-requests/${requestId}/complete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    showAlert('success', 'Shopping completed successfully.');
+                    await loadRequestDetails();
+                } else {
+                    const errorMessage = await response.text();
+                    showAlert('danger', errorMessage);
+                }
+            } catch (error) {
+                console.error('Error completing shopping:', error);
+                showAlert('danger', 'An error occurred while completing shopping.');
+            }
+        }
+
+        function openEditItemsModal() {
+            const modal = new bootstrap.Modal(document.getElementById('editItemsModal'));
+            setupEditItemsForm();
+            modal.show();
+        }
+
+        function setupEditItemsForm() {
+            const container = document.getElementById('editItemsContainer');
+            container.innerHTML = '';
+            editItemCounter = 0;
+
+            currentRequest.items.forEach(item => {
+                addEditItem(item);
+            });
+
+            document.getElementById('editEstimatedItemsPrice').value = currentRequest.estimatedItemsPrice;
+            document.getElementById('editDeliveryFee').value = currentRequest.deliveryFee;
+
+            document.getElementById('editEstimatedItemsPrice').addEventListener('input', updateEditTotals);
+            document.getElementById('editDeliveryFee').addEventListener('input', updateEditTotals);
+
+            updateEditTotals();
+        }
+
+        function addEditItem(existingItem = null) {
+            const container = document.getElementById('editItemsContainer');
+            const itemId = editItemCounter++;
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'border rounded p-3 mb-3';
+            itemDiv.id = `editItem_${itemId}`;
+
+            itemDiv.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="mb-0">Item ${itemId + 1}</h6>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeEditItem(${itemId})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-2">
+                            <label class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="itemName_${itemId}"
+                                   value="${existingItem ? existingItem.name || '' : ''}" required maxlength="100">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-2">
+                            <label class="form-label">Amount *</label>
+                            <input type="number" class="form-control" id="itemAmount_${itemId}"
+                                   value="${existingItem ? existingItem.amount || 1 : 1}" min="1" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-2">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="itemCategory_${itemId}">
+                                <option value="">Select category</option>
+                                <option value="Fresh Produce">Fresh Produce</option>
+                                <option value="Dairy & Eggs">Dairy & Eggs</option>
+                                <option value="Meat & Seafood">Meat & Seafood</option>
+                                <option value="Bakery">Bakery</option>
+                                <option value="Pantry">Pantry</option>
+                                <option value="Frozen">Frozen</option>
+                                <option value="Beverages">Beverages</option>
+                                <option value="Health & Beauty">Health & Beauty</option>
+                                <option value="Household">Household</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Description (Optional)</label>
+                    <textarea class="form-control" id="itemDescription_${itemId}" rows="2" maxlength="500">${existingItem ? existingItem.description || '' : ''}</textarea>
+                </div>
+            `;
+
+            container.appendChild(itemDiv);
+
+            if (existingItem && existingItem.category) {
+                document.getElementById(`itemCategory_${itemId}`).value = existingItem.category;
+            }
+        }
+
+        function removeEditItem(itemId) {
+            const itemDiv = document.getElementById(`editItem_${itemId}`);
+            if (itemDiv) {
+                itemDiv.remove();
+            }
+        }
+
+        async function saveItemsChanges() {
+            const items = [];
+            const container = document.getElementById('editItemsContainer');
+            const itemDivs = container.querySelectorAll('[id^="editItem_"]');
+
+            for (let itemDiv of itemDivs) {
+                const itemId = itemDiv.id.split('_')[1];
+                const name = document.getElementById(`itemName_${itemId}`).value.trim();
+                const amount = parseInt(document.getElementById(`itemAmount_${itemId}`).value);
+                const category = document.getElementById(`itemCategory_${itemId}`).value.trim();
+                const description = document.getElementById(`itemDescription_${itemId}`).value.trim();
+
+                if (!name || amount < 1) {
+                    showAlert('danger', 'Please fill in all required fields with valid values.');
+                    return;
+                }
+
+                items.push({
+                    name: name,
+                    amount: amount,
+                    category: category || null,
+                    description: description || null
+                });
+            }
+
+            if (items.length === 0) {
+                showAlert('danger', 'At least one item is required.');
+                return;
+            }
+
+            const estimatedItemsPrice = parseFloat(document.getElementById('editEstimatedItemsPrice').value) || 0;
+            const deliveryFee = parseFloat(document.getElementById('editDeliveryFee').value) || 0;
+
+            if (isNaN(estimatedItemsPrice) || estimatedItemsPrice < 0.01) {
+                showAlert('danger', 'Please enter a valid estimated items price (minimum €0.01).');
+                return;
+            }
+
+            if (isNaN(deliveryFee) || deliveryFee < 8.00) {
+                showAlert('danger', 'Please enter a valid delivery fee (minimum €8.00).');
+                return;
+            }
+
+            const updateRequest = {
+                items: items,
+                deliveryAddress: currentRequest.deliveryAddress,
+                estimatedItemsPrice: estimatedItemsPrice,
+                deliveryFee: deliveryFee
+            };
+
+            try {
+                const response = await fetch(`/api/shopping-requests/${requestId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateRequest)
+                });
+
+                if (response.ok) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editItemsModal'));
+                    modal.hide();
+                    showAlert('success', 'Items and pricing updated successfully.');
+                    await loadRequestDetails();
+                } else {
+                    let errorMessage = 'Failed to update items.';
+                    try {
+                        const errorText = await response.text();
+                        if (errorText) {
+                            errorMessage = errorText;
+                        }
+                    } catch (e) {
+                        console.error('Error reading response text:', e);
+                    }
+                    showAlert('danger', errorMessage);
+                }
+            } catch (error) {
+                console.error('Error updating items:', error);
+                showAlert('danger', 'An error occurred while updating items.');
+            }
+        }
+
+        function updateEditTotals() {
+            const itemsPrice = parseFloat(document.getElementById('editEstimatedItemsPrice').value) || 0;
+            const deliveryFee = parseFloat(document.getElementById('editDeliveryFee').value) || 0;
+            const total = itemsPrice + deliveryFee;
+
+            document.getElementById('editItemsCostDisplay').textContent = `€${itemsPrice.toFixed(2)}`;
+            document.getElementById('editDeliveryFeeDisplay').textContent = `€${deliveryFee.toFixed(2)}`;
+            document.getElementById('editTotalAmountDisplay').textContent = `€${total.toFixed(2)}`;
+        }
+
+        function openEditAddressModal() {
+            document.getElementById('editDeliveryAddress').value = currentRequest.deliveryAddress;
+            const modal = new bootstrap.Modal(document.getElementById('editAddressModal'));
+            modal.show();
+        }
+
+        async function saveAddressChanges() {
+            const newAddress = document.getElementById('editDeliveryAddress').value.trim();
+
+            if (!newAddress) {
+                showAlert('danger', 'Delivery address cannot be empty.');
+                return;
+            }
+
+            const updateRequest = {
+                items: currentRequest.items,
+                deliveryAddress: newAddress,
+                estimatedItemsPrice: currentRequest.estimatedItemsPrice,
+                deliveryFee: currentRequest.deliveryFee
+            };
+
+            try {
+                const response = await fetch(`/api/shopping-requests/${requestId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateRequest)
+                });
+
+                if (response.ok) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editAddressModal'));
+                    modal.hide();
+                    showAlert('success', 'Delivery address updated successfully.');
+                    await loadRequestDetails();
+                } else {
+                    let errorMessage = 'Failed to update delivery address.';
+                    try {
+                        const errorText = await response.text();
+                        if (errorText) {
+                            errorMessage = errorText;
+                        }
+                    } catch (e) {
+                        console.error('Error reading response text:', e);
+                    }
+                    showAlert('danger', errorMessage);
+                }
+            } catch (error) {
+                console.error('Error updating address:', error);
+                showAlert('danger', 'An error occurred while updating the address.');
+            }
+        }
+
+        function setupChatEventListeners() {
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendMessageBtn');
+
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            sendBtn.addEventListener('click', sendMessage);
+        }
+
+        async function loadChatMessages() {
+            const chatLoading = document.getElementById('chatLoading');
+            const noChatMessages = document.getElementById('noChatMessages');
+
+            try {
+                const response = await fetch(`/api/chat/shopping-request/${requestId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    const messages = await response.json();
+                    chatLoading.style.display = 'none';
+
+                    if (messages.length === 0) {
+                        noChatMessages.style.display = 'block';
+                    } else {
+                        noChatMessages.style.display = 'none';
+                        displayChatMessages(messages);
+                    }
+                } else {
+                    chatLoading.style.display = 'none';
+                    console.error('Failed to load chat messages');
+                }
+            } catch (error) {
+                console.error('Error loading chat messages:', error);
+                chatLoading.style.display = 'none';
+            }
+        }
+
+        function displayChatMessages(messages) {
+            const chatMessages = document.getElementById('chatMessages');
+            const existingMessages = chatMessages.querySelectorAll('.chat-message');
+            existingMessages.forEach(msg => msg.remove());
+
+            messages.forEach(message => {
+                const messageDiv = createChatMessageElement(message);
+                chatMessages.appendChild(messageDiv);
+            });
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function createChatMessageElement(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message mb-3';
+
+            const isCurrentUser = currentUser && message.senderId === currentUser.id;
+            const alignmentClass = isCurrentUser ? 'text-end' : 'text-start';
+            const bubbleClass = isCurrentUser ? 'bg-primary text-white' : 'bg-light';
+
+            messageDiv.innerHTML = `
+                <div class="${alignmentClass}">
+                    <div class="d-inline-block ${bubbleClass} rounded px-3 py-2 max-width-75">
+                        <div class="fw-bold small">${message.senderName}</div>
+                        <div>${message.messageContent}</div>
+                        <div class="small opacity-75 mt-1">${formatChatTime(message.timestamp)}</div>
+                    </div>
+                </div>
+            `;
+
+            return messageDiv;
+        }
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const messageContent = messageInput.value.trim();
+
+            if (!messageContent) return;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        shoppingRequestId: parseInt(requestId),
+                        messageContent: messageContent
+                    })
+                });
+
+                if (response.ok) {
+                    messageInput.value = '';
+                    await loadChatMessages();
+                    document.getElementById('noChatMessages').style.display = 'none';
+                } else {
+                    const errorMessage = await response.text();
+                    showAlert('danger', 'Failed to send message: ' + errorMessage);
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showAlert('danger', 'An error occurred while sending the message.');
+            }
+        }
+
+        function startChatRefresh() {
+            chatRefreshInterval = setInterval(async () => {
+                await loadChatMessages();
+            }, 5000);
+        }
+
+        function getStatusBadgeClass(status) {
+            switch (status) {
+                case 'PENDING': return 'bg-warning text-dark';
+                case 'ACCEPTED': return 'bg-info';
+                case 'IN_PROGRESS': return 'bg-primary';
+                case 'COMPLETED': return 'bg-success';
+                case 'CANCELLED': return 'bg-secondary';
+                default: return 'bg-secondary';
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatChatTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInHours = (now - date) / (1000 * 60 * 60);
+
+            if (diffInHours < 24) {
+                return date.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else {
+                return date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+        }
+
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    <i class="fas ${iconClass} me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+
+            alertContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        window.addEventListener('beforeunload', function() {
+            if (chatRefreshInterval) {
+                clearInterval(chatRefreshInterval);
+            }
+        });
+    </script>
+
+    <style>
+        .max-width-75 {
+            max-width: 75%;
+        }
+
+        #chatMessages {
+            background-color: #f8f9fa;
+        }
+    </style>
+</body>
+</html>

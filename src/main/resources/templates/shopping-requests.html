@@ -166,6 +166,11 @@
                                 <i class="fas fa-times me-1"></i>Cancel
                             </button>
                         ` : ''}
+                        ${!isCustomer && request.status === 'ACCEPTED' ? `
+                            <button class="btn btn-outline-warning btn-sm ms-2" onclick="abandonRequest(${request.id})">
+                                <i class="fas fa-times-circle me-1"></i>Abandon
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             `;
@@ -197,6 +202,32 @@
 
         function viewRequestDetails(requestId) {
             window.location.href = `/shopping-requests/${requestId}`;
+        }
+
+        async function abandonRequest(requestId) {
+            if (!confirm('Are you sure you want to abandon this shopping request?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/shopping-requests/${requestId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    showAlert('success', 'Shopping request abandoned successfully.');
+                    await loadShoppingRequests();
+                } else {
+                    const errorMessage = await response.text();
+                    showAlert('danger', errorMessage);
+                }
+            } catch (error) {
+                console.error('Error abandoning request:', error);
+                showAlert('danger', 'An error occurred while abandoning the request. Please try again.');
+            }
         }
 
         async function cancelRequest(requestId) {

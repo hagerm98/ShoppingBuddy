@@ -344,7 +344,7 @@
             const actionButtons = document.getElementById('actionButtons');
             actionButtons.innerHTML = '';
 
-            if (!currentUser) {
+            if (!currentUser || !currentRequest) {
                 return;
             }
 
@@ -354,8 +354,10 @@
             const isAssignedShopper = isShopper && currentRequest.shopperId === currentUser.id;
 
             if (isOwner) {
-                if (currentRequest.status === 'PENDING') {
+                if (currentRequest.status === 'PENDING' || currentRequest.status === 'ACCEPTED') {
                     actionButtons.appendChild(createActionButton('Cancel Request', 'btn-danger', 'fas fa-times', () => cancelRequest()));
+                }
+                if (currentRequest.status === 'PENDING') {
                     document.getElementById('editItemsBtn').style.display = 'inline-block';
                     document.getElementById('editAddressBtn').style.display = 'inline-block';
                 }
@@ -368,6 +370,7 @@
 
                 if (isAssignedShopper) {
                     if (currentRequest.status === 'ACCEPTED') {
+                        actionButtons.appendChild(createActionButton('Abandon Request', 'btn-warning', 'fas fa-times-circle', () => cancelRequest()));
                         actionButtons.appendChild(createActionButton('Start Shopping', 'btn-primary', 'fas fa-play', () => startShopping()));
                     } else if (currentRequest.status === 'IN_PROGRESS') {
                         actionButtons.appendChild(createActionButton('Complete Shopping', 'btn-success', 'fas fa-check-circle', () => completeShopping()));

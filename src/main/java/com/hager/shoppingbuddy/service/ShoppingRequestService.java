@@ -261,9 +261,9 @@ public class ShoppingRequestService {
 
         return ShoppingRequestResponse.builder()
                 .id(request.getId())
-                .customerId(request.getCustomer().getId())
+                .customerId(request.getCustomer().getUser().getId())
                 .customerName(request.getCustomer().getUser().getFirstName() + " " + request.getCustomer().getUser().getLastName())
-                .shopperId(request.getShopper() != null ? request.getShopper().getId() : null)
+                .shopperId(request.getShopper() != null ? request.getShopper().getUser().getId() : null)
                 .shopperName(request.getShopper() != null ? 
                         request.getShopper().getUser().getFirstName() + " " + request.getShopper().getUser().getLastName() : null)
                 .status(request.getStatus())

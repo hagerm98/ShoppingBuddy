@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{layout/header :: head('Browse Shopping Requests - ShoppingBuddy')}"></th:block>
+    <style>
+        .request-list-container {
+            height: 80vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+<nav th:replace="~{layout/header :: navbar('browse-shopping-requests')}"></nav>
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 fw-bold text-primary">
+                <i class="fas fa-search-location me-2"></i>Browse Available Requests
+            </h1>
+            <p class="text-muted">Here are the shopping requests available in your area. Click "Accept" to start a task.</p>
+        </div>
+    </div>
+
+    <div id="alertContainer"></div>
+
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div id="requestList" class="request-list-container card">
+                <div class="card-header">
+                    <h5 class="mb-0">Pending Requests</h5>
+                </div>
+                <div id="requestListBody" class="list-group list-group-flush">
+                    <div id="loadingRequests" class="text-center p-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading requests...</p>
+                    </div>
+                    <div id="noRequestsFound" class="text-center p-5" style="display: none;">
+                        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Pending Requests</h5>
+                        <p>Check back later for new opportunities.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="requestDetailsModal" tabindex="-1" aria-labelledby="requestDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="requestDetailsModalLabel">
+                    <i class="fas fa-shopping-bag me-2"></i>Request Details - #<span id="modalRequestId"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Requester Details</h6>
+                        <p><i class="fas fa-user me-2 text-primary"></i><strong id="modalCustomerName"></strong></p>
+                        <p><i class="fas fa-map-marker-alt me-2 text-primary"></i><span id="modalDeliveryAddress"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Pricing</h6>
+                        <p><i class="fas fa-box me-2 text-primary"></i>Est. Items Price: <strong class="text-success">€<span id="modalEstimatedPrice"></span></strong></p>
+                        <p><i class="fas fa-truck me-2 text-primary"></i>Delivery Fee: <strong class="text-success">€<span id="modalDeliveryFee"></span></strong></p>
+                        <p><i class="fas fa-euro-sign me-2 text-primary"></i>Total Amount: <strong class="text-success h5">€<span id="modalTotalAmount"></span></strong></p>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <h5 class="mb-3"><i class="fas fa-list-ul me-2"></i>Shopping List</h5>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <ul id="modalItemsList" class="list-group list-group-flush">
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="modalAcceptBtn" type="button" class="btn btn-primary btn-lg">
+                    <i class="fas fa-check-circle me-2"></i>Accept Request
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{layout/footer :: footer}"></footer>
+<script th:replace="~{layout/footer :: scripts}"></script>
+
+<script>
+    let requests = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPendingRequests();
+    });
+
+    async function loadPendingRequests() {
+        const loadingDiv = document.getElementById('loadingRequests');
+        const noRequestsDiv = document.getElementById('noRequestsFound');
+
+        try {
+            const response = await fetch('/api/shopping-requests/pending');
+            if (!response.ok) {
+                throw new Error('Failed to load requests.');
+            }
+            requests = await response.json();
+
+            loadingDiv.style.display = 'none';
+
+            if (requests.length === 0) {
+                noRequestsDiv.style.display = 'block';
+            } else {
+                displayRequests(requests);
+            }
+        } catch (error) {
+            console.error('Error loading requests:', error);
+            loadingDiv.style.display = 'none';
+            showAlert('danger', 'Could not load shopping requests. Please try again later.');
+        }
+    }
+
+    function displayRequests(requests) {
+        const requestListBody = document.getElementById('requestListBody');
+        requestListBody.innerHTML = '';
+
+        requests.forEach(request => {
+            const totalAmount = (request.estimatedItemsPrice + request.deliveryFee).toFixed(2);
+            const card = document.createElement('div');
+            card.className = 'list-group-item list-group-item-action request-card flex-column align-items-start p-3';
+            card.id = `request-card-${request.id}`;
+            card.style.cursor = 'pointer';
+            card.innerHTML = `
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1 text-primary">Request #${request.id}</h5>
+                    <small class="text-muted">${new Date(request.createdAt).toLocaleDateString()}</small>
+                </div>
+                <p class="mb-1"><i class="fas fa-user me-2 text-muted"></i>${request.customerName}</p>
+                <p class="mb-2"><i class="fas fa-map-marker-alt me-2 text-muted"></i>${request.deliveryAddress}</p>
+                <div class="d-flex w-100 justify-content-between align-items-center mt-2">
+                    <div>
+                        <span class="badge bg-primary me-2">Items: ${request.items.length}</span>
+                        <span class="badge bg-success">Total: €${totalAmount}</span>
+                    </div>
+                    <small class="text-primary fw-bold">View Details <i class="fas fa-arrow-right"></i></small>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                populateAndShowModal(request);
+            });
+
+            requestListBody.appendChild(card);
+        });
+    }
+
+    function populateAndShowModal(request) {
+        document.getElementById('modalRequestId').textContent = request.id;
+        document.getElementById('modalCustomerName').textContent = request.customerName;
+        document.getElementById('modalDeliveryAddress').textContent = request.deliveryAddress;
+        document.getElementById('modalEstimatedPrice').textContent = request.estimatedItemsPrice.toFixed(2);
+        document.getElementById('modalDeliveryFee').textContent = request.deliveryFee.toFixed(2);
+        document.getElementById('modalTotalAmount').textContent = (request.estimatedItemsPrice + request.deliveryFee).toFixed(2);
+
+        const itemsList = document.getElementById('modalItemsList');
+        itemsList.innerHTML = '';
+        if (request.items && request.items.length > 0) {
+            request.items.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-start';
+                li.innerHTML = `
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">${item.name}</div>
+                        <small class="text-muted">${item.description || ''}</small>
+                    </div>
+                    <span class="badge bg-primary rounded-pill">${item.amount}</span>
+                `;
+                itemsList.appendChild(li);
+            });
+        } else {
+            itemsList.innerHTML = '<li class="list-group-item">No items listed.</li>';
+        }
+
+        const acceptBtn = document.getElementById('modalAcceptBtn');
+        acceptBtn.dataset.requestId = request.id;
+        acceptBtn.onclick = (event) => handleAcceptRequest(event);
+
+        const modal = new bootstrap.Modal(document.getElementById('requestDetailsModal'));
+        modal.show();
+    }
+
+    async function handleAcceptRequest(event) {
+        event.stopPropagation();
+        const button = event.currentTarget;
+        const requestId = button.dataset.requestId;
+
+        if (!confirm(`Are you sure you want to accept shopping request #${requestId}?`)) {
+            return;
+        }
+
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Accepting...';
+
+        try {
+            const response = await fetch(`/api/shopping-requests/${requestId}/accept`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                showAlert('success', `Request #${requestId} accepted successfully! Redirecting...`);
+                setTimeout(() => {
+                    window.location.href = `/shopping-requests/${requestId}`;
+                }, 2000);
+            } else {
+                const errorMessage = await response.text();
+                throw new Error(errorMessage || 'Failed to accept the request.');
+            }
+        } catch (error) {
+            console.error('Error accepting request:', error);
+            showAlert('danger', `Error: ${error.message}`);
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-check me-1"></i> Accept';
+        }
+    }
+
+    function showAlert(type, message) {
+        const alertContainer = document.getElementById('alertContainer');
+        const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+
+        alertContainer.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                <i class="fas ${iconClass} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        window.scrollTo(0, 0);
+    }
+</script>
+</body>
+</html>

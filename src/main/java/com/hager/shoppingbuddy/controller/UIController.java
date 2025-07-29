@@ -122,11 +122,21 @@ public class UIController {
     @GetMapping("/shopping-requests/create")
     public String createShoppingRequest(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() ||
-            authentication.getPrincipal().equals("anonymousUser")) {
-            return "redirect:/login";
+                authentication.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("CUSTOMER"))) {
+            return "redirect:/";
         }
 
         return "create-shopping-request";
+    }
+
+    @GetMapping("/shopping-requests/browse")
+    public String browseShoppingRequests(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("SHOPPER"))) {
+            return "redirect:/";
+        }
+
+        return "browse-shopping-requests";
     }
 
     @GetMapping("/shopping-requests/{*}")

@@ -48,6 +48,10 @@ public class ShoppingRequest {
 
     private String deliveryAddress;
 
+    private Double latitude;
+
+    private Double longitude;
+
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 }

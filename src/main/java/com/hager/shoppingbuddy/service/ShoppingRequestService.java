@@ -22,19 +22,24 @@ public class ShoppingRequestService {
     private final ShoppingRequestRepository shoppingRequestRepository;
     private final CustomerRepository customerRepository;
     private final ShopperRepository shopperRepository;
+    private final GeocodingService geocodingService;
 
     @Transactional
     public ShoppingRequestResponse createShoppingRequest(String customerEmail, ShoppingRequestCreateRequest request)
             throws CustomerNotFoundException {
         log.info("Creating shopping request for customer: {}", customerEmail);
-        
+
         Customer customer = customerRepository.findByUserEmail(customerEmail)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found with email: " + customerEmail));
+
+        com.google.maps.model.LatLng location = geocodingService.getLatLngFromAddress(request.getDeliveryAddress());
 
         ShoppingRequest shoppingRequest = ShoppingRequest.builder()
                 .customer(customer)
                 .status(ShoppingRequestStatus.PENDING)
                 .deliveryAddress(request.getDeliveryAddress())
+                .latitude(location != null ? location.lat : null)
+                .longitude(location != null ? location.lng : null)
                 .estimatedItemsPrice(request.getEstimatedItemsPrice())
                 .deliveryFee(request.getDeliveryFee())
                 .paymentStatus(PaymentStatus.PENDING)
@@ -201,6 +206,10 @@ public class ShoppingRequestService {
         shoppingRequest.setDeliveryFee(request.getDeliveryFee());
         shoppingRequest.setUpdatedAt(Instant.now());
 
+        com.google.maps.model.LatLng location = geocodingService.getLatLngFromAddress(request.getDeliveryAddress());
+        shoppingRequest.setLatitude(location != null ? location.lat : null);
+        shoppingRequest.setLongitude(location != null ? location.lng : null);
+
         ShoppingRequest savedRequest = populateShoppingRequestItems(shoppingRequest, request.getItems());
 
         log.info("Successfully updated shopping request with ID: {}", savedRequest.getId());
@@ -265,6 +274,8 @@ public class ShoppingRequestService {
                 .deliveryFee(request.getDeliveryFee())
                 .deliveryAddress(request.getDeliveryAddress())
                 .paymentStatus(request.getPaymentStatus())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
                 .build();
     }
 }

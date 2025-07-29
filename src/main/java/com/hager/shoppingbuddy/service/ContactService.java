@@ -13,7 +13,7 @@ public class ContactService {
 
     private final EmailService emailService;
 
-    @Value("${shoppingbuddy.email}")
+    @Value("${shoppingbuddy.email.address}")
     private String companyEmail;
 
     public void processContactForm(ContactRequest contactRequest) {

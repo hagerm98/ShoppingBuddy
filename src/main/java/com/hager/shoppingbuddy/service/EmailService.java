@@ -16,7 +16,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${shoppingbuddy.email}")
+    @Value("${shoppingbuddy.email.address}")
     private String fromEmail;
 
     public void send(String to, String subject, String email) {

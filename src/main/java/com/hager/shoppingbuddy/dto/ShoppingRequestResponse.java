@@ -29,4 +29,6 @@ public class ShoppingRequestResponse {
     private double deliveryFee;
     private String deliveryAddress;
     private PaymentStatus paymentStatus;
+    private Double latitude;
+    private Double longitude;
 }

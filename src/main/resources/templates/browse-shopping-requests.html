@@ -2,12 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{layout/header :: head('Browse Shopping Requests - ShoppingBuddy')}"></th:block>
-    <style>
-        .request-list-container {
-            height: 80vh;
-            overflow-y: auto;
-        }
-    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 </head>
 <body>
 <nav th:replace="~{layout/header :: navbar('browse-shopping-requests')}"></nav>
@@ -25,8 +20,8 @@
     <div id="alertContainer"></div>
 
     <div class="row">
-        <div class="col-lg-10 mx-auto">
-            <div id="requestList" class="request-list-container card">
+        <div class="col-lg-5">
+            <div id="requestList" class="request-list-container card" style="height: 80vh; overflow-y: auto;">
                 <div class="card-header">
                     <h5 class="mb-0">Pending Requests</h5>
                 </div>
@@ -44,6 +39,9 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="col-lg-7">
+            <div id="map" class="shadow-sm" style="height: 80vh; border-radius: 0.375rem;"></div>
         </div>
     </div>
 </div>
@@ -93,12 +91,25 @@
 <footer th:replace="~{layout/footer :: footer}"></footer>
 <script th:replace="~{layout/footer :: scripts}"></script>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
 <script>
     let requests = [];
+    let map;
+    let markers = {};
 
     document.addEventListener('DOMContentLoaded', function() {
+        initMap();
         loadPendingRequests();
     });
+
+    function initMap() {
+        map = L.map('map').setView([53.3498, -6.2603], 8); // starting the view map at Dublin
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+    }
 
     async function loadPendingRequests() {
         const loadingDiv = document.getElementById('loadingRequests');
@@ -117,6 +128,7 @@
                 noRequestsDiv.style.display = 'block';
             } else {
                 displayRequests(requests);
+                addMarkersToMap(requests);
             }
         } catch (error) {
             console.error('Error loading requests:', error);
@@ -153,10 +165,58 @@
 
             card.addEventListener('click', () => {
                 populateAndShowModal(request);
+                if (map && markers[request.id]) {
+                    map.setView(markers[request.id].getLatLng(), 15);
+                    markers[request.id].openPopup();
+                }
             });
 
             requestListBody.appendChild(card);
         });
+    }
+
+    function addMarkersToMap(requests) {
+        Object.values(markers).forEach(marker => marker.remove());
+        markers = {};
+
+        const validRequests = requests.filter(r => r.latitude != null && r.longitude != null);
+
+        if (validRequests.length > 0) {
+            const bounds = L.latLngBounds(validRequests.map(r => [r.latitude, r.longitude]));
+            map.fitBounds(bounds.pad(0.1));
+        }
+
+        requests.forEach(request => {
+            if (request.latitude && request.longitude) {
+                const marker = L.marker([request.latitude, request.longitude]).addTo(map);
+                const totalAmount = (request.estimatedItemsPrice + request.deliveryFee).toFixed(2);
+                const popupContent = `
+                    <b>Request #${request.id}</b><br>
+                    ${request.deliveryAddress}<br>
+                    Total: €${totalAmount}<br>
+                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="openModalForRequest(${request.id})">View Details</button>
+                `;
+                marker.bindPopup(popupContent);
+
+                marker.on('click', () => {
+                    const card = document.getElementById(`request-card-${request.id}`);
+                    if (card) {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        card.classList.add('bg-light');
+                        setTimeout(() => card.classList.remove('bg-light'), 2000);
+                    }
+                });
+
+                markers[request.id] = marker;
+            }
+        });
+    }
+
+    function openModalForRequest(requestId) {
+        const request = requests.find(r => r.id === requestId);
+        if (request) {
+            populateAndShowModal(request);
+        }
     }
 
     function populateAndShowModal(request) {
@@ -216,6 +276,12 @@
 
             if (response.ok) {
                 showAlert('success', `Request #${requestId} accepted successfully! Redirecting...`);
+                document.getElementById(`request-card-${requestId}`).remove();
+                if (markers[requestId]) {
+                    markers[requestId].remove();
+                    delete markers[requestId];
+                }
+
                 setTimeout(() => {
                     window.location.href = `/shopping-requests/${requestId}`;
                 }, 2000);

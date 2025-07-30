@@ -23,6 +23,7 @@ public class ShoppingRequestService {
     private final CustomerRepository customerRepository;
     private final ShopperRepository shopperRepository;
     private final GeocodingService geocodingService;
+    private final ShoppingRequestNotificationService notificationService;
 
     @Transactional
     public ShoppingRequestResponse createShoppingRequest(String customerEmail, ShoppingRequestCreateRequest request)
@@ -48,6 +49,8 @@ public class ShoppingRequestService {
                 .build();
 
         ShoppingRequest savedRequest = populateShoppingRequestItems(shoppingRequest, request.getItems());
+
+        notificationService.notifyShoppingRequestCreated(savedRequest);
 
         log.info("Successfully created shopping request with ID: {}", savedRequest.getId());
         return convertToResponse(savedRequest);
@@ -110,6 +113,9 @@ public class ShoppingRequestService {
         request.setUpdatedAt(Instant.now());
 
         ShoppingRequest savedRequest = shoppingRequestRepository.save(request);
+
+        notificationService.notifyShoppingRequestAccepted(savedRequest);
+
         log.info("Shopping request {} accepted by shopper {}", requestId, shopperEmail);
         return convertToResponse(savedRequest);
     }
@@ -130,6 +136,9 @@ public class ShoppingRequestService {
         request.setUpdatedAt(Instant.now());
 
         ShoppingRequest savedRequest = shoppingRequestRepository.save(request);
+
+        notificationService.notifyShoppingStarted(savedRequest);
+
         log.info("Shopping started for request: {}", requestId);
         return convertToResponse(savedRequest);
     }
@@ -150,6 +159,9 @@ public class ShoppingRequestService {
         request.setUpdatedAt(Instant.now());
 
         ShoppingRequest savedRequest = shoppingRequestRepository.save(request);
+
+        notificationService.notifyShoppingCompleted(savedRequest);
+
         log.info("Shopping completed for request: {}", requestId);
         return convertToResponse(savedRequest);
     }
@@ -178,6 +190,9 @@ public class ShoppingRequestService {
         request.setUpdatedAt(Instant.now());
 
         ShoppingRequest savedRequest = shoppingRequestRepository.save(request);
+
+        notificationService.notifyShoppingRequestCancelled(savedRequest, userEmail);
+
         log.info("Shopping request {} cancelled by user: {}", requestId, userEmail);
         return convertToResponse(savedRequest);
     }
@@ -211,6 +226,8 @@ public class ShoppingRequestService {
         shoppingRequest.setLongitude(location != null ? location.lng : null);
 
         ShoppingRequest savedRequest = populateShoppingRequestItems(shoppingRequest, request.getItems());
+
+        notificationService.notifyShoppingRequestUpdated(savedRequest);
 
         log.info("Successfully updated shopping request with ID: {}", savedRequest.getId());
         return convertToResponse(savedRequest);

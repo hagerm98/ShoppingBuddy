@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${title} ?: 'ShoppingBuddy - Your Smart Shopping Companion'"></title>
+
+    <meta property="og:title" th:content="${title} ?: 'ShoppingBuddy - Your Smart Shopping Companion'">
+    <meta property="og:description" content="Your flexible peer-to-peer delivery platform connecting customers with independent shoppers. Get items from ANY local store delivered to your door.">
+    <meta property="og:image" content="https://shopping-buddy.shop/images/shopping-buddy.jpg">
+    <meta property="og:image:alt" content="ShoppingBuddy - Peer-to-peer shopping platform">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ShoppingBuddy">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" th:content="${title} ?: 'ShoppingBuddy - Your Smart Shopping Companion'">
+    <meta name="twitter:description" content="Your flexible peer-to-peer delivery platform connecting customers with independent shoppers. Get items from ANY local store delivered to your door.">
+    <meta name="twitter:image" content="https://shopping-buddy.shop/images/shopping-buddy.jpg">
+    <meta name="twitter:image:alt" content="ShoppingBuddy - Peer-to-peer shopping platform">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>

@@ -367,7 +367,7 @@
                     showAlert('success', `Shopping request created successfully! Request ID: ${result.id}`);
 
                     setTimeout(() => {
-                        window.location.href = '/shopping-requests';
+                        window.location.href = `/checkout/${result.id}/payment`;
                     }, 2000);
                 } else {
                     const contentType = response.headers.get('content-type');

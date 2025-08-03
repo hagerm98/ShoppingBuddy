@@ -354,6 +354,11 @@
             const isAssignedShopper = isShopper && currentRequest.shopperId === currentUser.id;
 
             if (isOwner) {
+                if (currentRequest.paymentStatus === 'PENDING' ||
+                    currentRequest.paymentStatus === 'FAILED') {
+                    actionButtons.appendChild(createActionButton('Complete Payment', 'btn-success', 'fas fa-credit-card', () => completePayment()));
+                }
+
                 if (currentRequest.status === 'PENDING' || currentRequest.status === 'ACCEPTED') {
                     actionButtons.appendChild(createActionButton('Cancel Request', 'btn-danger', 'fas fa-times', () => cancelRequest()));
                 }
@@ -485,6 +490,10 @@
                 console.error('Error completing shopping:', error);
                 showAlert('danger', 'An error occurred while completing shopping.');
             }
+        }
+
+        async function completePayment() {
+            window.location.href = `/checkout/${requestId}/payment`;
         }
 
         function openEditItemsModal() {

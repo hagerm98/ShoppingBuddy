@@ -5,6 +5,7 @@ import org.springframework.security.web.WebAttributes;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpSession;
@@ -147,5 +148,25 @@ public class UIController {
         }
 
         return "shopping-request-details";
+    }
+
+    @GetMapping("/checkout/{requestId}/payment")
+    public String checkout(@PathVariable Long requestId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() ||
+            authentication.getPrincipal().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+
+        return "checkout";
+    }
+
+    @GetMapping("/checkout/{requestId}/success")
+    public String paymentSuccess(@PathVariable Long requestId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() ||
+            authentication.getPrincipal().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+
+        return "payment-success";
     }
 }

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/header :: head('Payment Checkout - ShoppingBuddy')}"></head>
+<body>
+    <nav th:replace="~{layout/header :: navbar('shopping-requests')}"></nav>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-credit-card me-2"></i>Payment Checkout
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="alertContainer"></div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">Order Summary</h6>
+                                <div class="border rounded p-3 bg-light">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Shopping Request #</span>
+                                        <strong id="requestId"></strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Items Cost:</span>
+                                        <span id="itemsCost">€0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Delivery Fee:</span>
+                                        <span id="deliveryFee">€0.00</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Total Amount:</strong>
+                                        <strong class="text-success" id="totalAmount">€0.00</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">Delivery Address</h6>
+                                <div class="border rounded p-3 bg-light">
+                                    <p id="deliveryAddress" class="mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-credit-card me-2"></i>Payment Information
+                            </h6>
+                            <div id="payment-element" class="border rounded p-3">
+                                <!-- This position will have the Stripe elements injected here -->
+                            </div>
+                            <div id="payment-errors" class="text-danger mt-2" role="alert"></div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button id="submit-payment" class="btn btn-success btn-lg" disabled>
+                                <span id="button-text">
+                                    <i class="fas fa-lock me-2"></i>Authorize Payment
+                                </span>
+                                <span id="spinner" class="spinner-border spinner-border-sm me-2" role="status" style="display: none;">
+                                    <span class="visually-hidden">Loading...</span>
+                                </span>
+                            </button>
+                            <a href="/shopping-requests" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Requests
+                            </a>
+                        </div>
+
+                        <div class="alert alert-info mt-3" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Payment Authorization:</strong> Your payment method will be pre-authorized but not charged until your shopping request is completed by a shopper.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+    <script th:replace="~{layout/footer :: scripts}"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+
+    <script>
+        let stripe;
+        let elements;
+        let requestId;
+        let clientSecret;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            requestId = extractRequestIdFromUrl();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+
+            if (error) {
+                if (error === 'authorization_failed') {
+                    showAlert('danger', 'Payment authorization failed. Please try again with a different payment method.');
+                } else if (error === 'processing_failed') {
+                    showAlert('danger', 'Payment processing failed. Please try again or contact support if the issue persists.');
+                } else {
+                    showAlert('danger', 'An error occurred during payment processing. Please try again.');
+                }
+            }
+
+            if (requestId) {
+                await initializePayment();
+            } else {
+                showAlert('danger', 'Invalid request ID');
+            }
+        });
+
+        function extractRequestIdFromUrl() {
+            const pathParts = window.location.pathname.split('/');
+            return pathParts[pathParts.length - 2];
+        }
+
+        async function initializePayment() {
+            try {
+                const requestResponse = await fetch(`/api/shopping-requests/${requestId}`);
+                if (!requestResponse.ok) {
+                    throw new Error('Failed to load shopping request details');
+                }
+                const request = await requestResponse.json();
+
+                if (!request.stripeClientSecret) {
+                    showAlert('danger', 'Payment not initialized. Please try creating the request again.');
+                    return;
+                }
+
+                displayRequestDetails(request);
+
+                const keyResponse = await fetch('/api/payment/public-key');
+                const publicKey = await keyResponse.text();
+
+                stripe = Stripe(publicKey);
+                clientSecret = request.stripeClientSecret;
+
+                const appearance = {
+                    theme: 'stripe',
+                    variables: {
+                        colorPrimary: '#0d6efd',
+                    }
+                };
+
+                elements = stripe.elements({
+                    clientSecret: clientSecret,
+                    appearance: appearance
+                });
+
+                const paymentElement = elements.create('payment');
+                paymentElement.mount('#payment-element');
+
+                paymentElement.on('ready', () => {
+                    document.getElementById('submit-payment').disabled = false;
+                });
+
+                paymentElement.on('change', (event) => {
+                    const displayError = document.getElementById('payment-errors');
+                    if (event.error) {
+                        displayError.textContent = event.error.message;
+                    } else {
+                        displayError.textContent = '';
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error initializing payment:', error);
+                showAlert('danger', 'Failed to initialize payment. Please try again.');
+            }
+        }
+
+        function displayRequestDetails(request) {
+            document.getElementById('requestId').textContent = request.id;
+            document.getElementById('itemsCost').textContent = `€${request.estimatedItemsPrice.toFixed(2)}`;
+            document.getElementById('deliveryFee').textContent = `€${request.deliveryFee.toFixed(2)}`;
+            document.getElementById('totalAmount').textContent = `€${(request.estimatedItemsPrice + request.deliveryFee).toFixed(2)}`;
+            document.getElementById('deliveryAddress').textContent = request.deliveryAddress;
+        }
+
+        document.getElementById('submit-payment').addEventListener('click', handleSubmit);
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            setLoading(true);
+
+            try {
+                const {error} = await stripe.confirmPayment({
+                    elements,
+                    confirmParams: {
+                        return_url: `${window.location.origin}/api/payment/${requestId}/authorize`,
+                    }
+                });
+
+                if (error) {
+                    if (error.type === "card_error" || error.type === "validation_error") {
+                        showAlert('danger', error.message);
+                        const displayError = document.getElementById('payment-errors');
+                        displayError.textContent = error.message;
+                    } else {
+                        showAlert('danger', "An unexpected error occurred.");
+                    }
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                showAlert('danger', 'Payment processing failed. Please try again.');
+                setLoading(false);
+            }
+        }
+
+        function setLoading(isLoading) {
+            const submitButton = document.getElementById('submit-payment');
+            const buttonText = document.getElementById('button-text');
+            const spinner = document.getElementById('spinner');
+
+            if (isLoading) {
+                submitButton.disabled = true;
+                buttonText.style.display = 'none';
+                spinner.style.display = 'inline-block';
+            } else {
+                submitButton.disabled = false;
+                buttonText.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        }
+
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    <i class="fas ${iconClass} me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+
+            alertContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

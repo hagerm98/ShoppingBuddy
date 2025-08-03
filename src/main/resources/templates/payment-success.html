@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/header :: head('Payment Success - ShoppingBuddy')}"></head>
+<body>
+    <nav th:replace="~{layout/header :: navbar('shopping-requests')}"></nav>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card shadow text-center">
+                    <div class="card-body p-5">
+                        <div class="mb-4">
+                            <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        <h2 class="text-success mb-3">Payment Authorized Successfully!</h2>
+                        <p class="lead mb-4">Your payment method has been pre-authorized successfully. Your shopping request is now active and shoppers can accept it. You will only be charged when your request is completed.</p>
+
+                        <div class="border rounded p-3 bg-light mb-4">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <strong>Request ID:</strong>
+                                    <div id="requestId" class="text-primary"></div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>Pre-authorized Amount:</strong>
+                                    <div id="amountPaid" class="text-success"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <a href="#" id="viewRequestBtn" class="btn btn-primary btn-lg">
+                                <i class="fas fa-eye me-2"></i>View Request Details
+                            </a>
+                            <a href="/shopping-requests" class="btn btn-outline-secondary">
+                                <i class="fas fa-list me-2"></i>My Shopping Requests
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+    <script th:replace="~{layout/footer :: scripts}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const requestId = extractRequestIdFromUrl();
+            if (requestId) {
+                await loadRequestDetails(requestId);
+                document.getElementById('viewRequestBtn').href = `/shopping-requests/${requestId}`;
+            }
+        });
+
+        function extractRequestIdFromUrl() {
+            const pathParts = window.location.pathname.split('/');
+            return pathParts[pathParts.length - 2];
+        }
+
+        async function loadRequestDetails(requestId) {
+            try {
+                const response = await fetch(`/api/shopping-requests/${requestId}`);
+                if (response.ok) {
+                    const request = await response.json();
+                    document.getElementById('requestId').textContent = request.id;
+                    const totalAmount = request.estimatedItemsPrice + request.deliveryFee;
+                    document.getElementById('amountPaid').textContent = `€${totalAmount.toFixed(2)}`;
+                }
+            } catch (error) {
+                console.error('Error loading request details:', error);
+            }
+        }
+    </script>
+</body>
+</html>

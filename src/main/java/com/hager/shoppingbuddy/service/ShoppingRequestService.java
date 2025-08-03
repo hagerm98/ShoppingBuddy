@@ -4,6 +4,7 @@ import com.hager.shoppingbuddy.dto.*;
 import com.hager.shoppingbuddy.entity.*;
 import com.hager.shoppingbuddy.exception.*;
 import com.hager.shoppingbuddy.repository.*;
+import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,10 +25,11 @@ public class ShoppingRequestService {
     private final ShopperRepository shopperRepository;
     private final GeocodingService geocodingService;
     private final ShoppingRequestNotificationService notificationService;
+    private final PaymentService paymentService;
 
     @Transactional
     public ShoppingRequestResponse createShoppingRequest(String customerEmail, ShoppingRequestCreateRequest request)
-            throws CustomerNotFoundException {
+            throws CustomerNotFoundException, StripeException {
         log.info("Creating shopping request for customer: {}", customerEmail);
 
         Customer customer = customerRepository.findByUserEmail(customerEmail)
@@ -49,6 +51,13 @@ public class ShoppingRequestService {
                 .build();
 
         ShoppingRequest savedRequest = populateShoppingRequestItems(shoppingRequest, request.getItems());
+
+        double totalAmount = savedRequest.getEstimatedItemsPrice() + savedRequest.getDeliveryFee();
+        paymentService.createPaymentIntent(
+                savedRequest.getId(),
+                customer.getUser().getId(),
+                totalAmount
+        );
 
         notificationService.notifyShoppingRequestCreated(savedRequest);
 
@@ -160,6 +169,16 @@ public class ShoppingRequestService {
 
         ShoppingRequest savedRequest = shoppingRequestRepository.save(request);
 
+        try {
+            Payment payment = paymentService.capturePayment(requestId);
+            savedRequest.setPaymentStatus(payment.getStatus());
+            shoppingRequestRepository.save(savedRequest);
+            log.info("Payment captured successfully for completed shopping request: {}", requestId);
+        } catch (Exception e) {
+            log.error("Failed to capture payment for shopping request: {}", requestId, e);
+            throw new InvalidShoppingRequestActionException("Failed to capture payment for completed shopping request");
+        }
+
         notificationService.notifyShoppingCompleted(savedRequest);
 
         log.info("Shopping completed for request: {}", requestId);
@@ -233,6 +252,20 @@ public class ShoppingRequestService {
         return convertToResponse(savedRequest);
     }
 
+    @Transactional
+    public void updatePaymentStatus(Long shoppingRequestId, PaymentStatus paymentStatus) throws ShoppingRequestNotFoundException {
+        log.info("Updating payment status for shopping request: {} to {}", shoppingRequestId, paymentStatus);
+
+        ShoppingRequest request = shoppingRequestRepository.findById(shoppingRequestId)
+                .orElseThrow(() -> new ShoppingRequestNotFoundException("Shopping request not found with ID: " + shoppingRequestId));
+
+        request.setPaymentStatus(paymentStatus);
+        request.setUpdatedAt(Instant.now());
+
+        shoppingRequestRepository.save(request);
+        log.info("Payment status updated for shopping request: {}", shoppingRequestId);
+    }
+
     private ShoppingRequest populateShoppingRequestItems(ShoppingRequest shoppingRequest, List<ItemRequest> itemRequests) {
         if (shoppingRequest.getItems() != null) {
             shoppingRequest.getItems().clear();
@@ -276,6 +309,8 @@ public class ShoppingRequestService {
                                 .build())
                         .collect(Collectors.toList()) : List.of();
 
+        Payment payment = paymentService.getPaymentByShoppingRequestId(request.getId());
+
         return ShoppingRequestResponse.builder()
                 .id(request.getId())
                 .customerId(request.getCustomer().getUser().getId())
@@ -293,6 +328,8 @@ public class ShoppingRequestService {
                 .paymentStatus(request.getPaymentStatus())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
+                .stripeClientSecret(payment != null ? payment.getStripeClientSecret() : null)
+                .stripePaymentIntentId(payment != null ? payment.getStripePaymentIntentId() : null)
                 .build();
     }
 }

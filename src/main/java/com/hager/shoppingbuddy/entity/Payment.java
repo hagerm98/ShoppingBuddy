@@ -29,6 +29,10 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
+    private String stripePaymentIntentId;
+
+    private String stripeClientSecret;
+
     private Instant createdTimestamp;
 
     private Instant collectedTimestamp;

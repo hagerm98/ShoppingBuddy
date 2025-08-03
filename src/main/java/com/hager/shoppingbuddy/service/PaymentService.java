@@ -32,7 +32,7 @@ public class PaymentService {
     private String stripePublicKey;
 
     @Transactional
-    public void createPaymentIntent(Long shoppingRequestId, Long customerId, double amount) throws StripeException {
+    public void createPaymentIntent(Long shoppingRequestId, Long customerId, double amount) throws PaymentException {
         log.info("Creating payment intent for shopping request: {} with amount: {}", shoppingRequestId, amount);
 
         Stripe.apiKey = stripeSecretKey;
@@ -49,7 +49,12 @@ public class PaymentService {
                 .addPaymentMethodType("card")
                 .build();
 
-        PaymentIntent paymentIntent = PaymentIntent.create(params);
+        PaymentIntent paymentIntent;
+        try {
+            paymentIntent = PaymentIntent.create(params);
+        } catch (StripeException e) {
+            throw new PaymentException("Failed to create payment intent: " + e.getMessage(), e);
+        }
 
         Payment payment = Payment.builder()
                 .shoppingRequestId(shoppingRequestId)
@@ -67,7 +72,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public Payment authorizePayment(Long shoppingRequestId) throws StripeException, PaymentException {
+    public Payment authorizePayment(Long shoppingRequestId) throws PaymentException {
         log.info("Authorizing payment for shopping request: {}", shoppingRequestId);
 
         Payment payment = paymentRepository.findByShoppingRequestId(shoppingRequestId)
@@ -79,7 +84,12 @@ public class PaymentService {
 
         Stripe.apiKey = stripeSecretKey;
 
-        PaymentIntent paymentIntent = PaymentIntent.retrieve(payment.getStripePaymentIntentId());
+        PaymentIntent paymentIntent;
+        try {
+            paymentIntent = PaymentIntent.retrieve(payment.getStripePaymentIntentId());
+        } catch (StripeException e) {
+            throw new PaymentException("Failed to retrieve payment intent: " + e.getMessage(), e);
+        }
 
         if (!"requires_capture".equals(paymentIntent.getStatus())) {
             throw new PaymentException("Payment intent is not authorized. Status: " + paymentIntent.getStatus());
@@ -94,7 +104,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public Payment capturePayment(Long shoppingRequestId) throws StripeException, PaymentException {
+    public Payment capturePayment(Long shoppingRequestId) throws PaymentException {
         log.info("Capturing payment for shopping request: {}", shoppingRequestId);
 
         Payment payment = paymentRepository.findByShoppingRequestId(shoppingRequestId)
@@ -106,19 +116,77 @@ public class PaymentService {
 
         Stripe.apiKey = stripeSecretKey;
 
-        PaymentIntent paymentIntent = PaymentIntent.retrieve(payment.getStripePaymentIntentId());
+        PaymentIntent paymentIntent;
+        try {
+            paymentIntent = PaymentIntent.retrieve(payment.getStripePaymentIntentId());
+        } catch (StripeException e) {
+            throw new PaymentException("Failed to retrieve payment intent: " + e.getMessage(), e);
+        }
 
         if (!"requires_capture".equals(paymentIntent.getStatus())) {
             throw new PaymentException("Payment intent is not ready for capture. Status: " + paymentIntent.getStatus());
         }
 
-        paymentIntent.capture();
+        try {
+            paymentIntent.capture();
+        } catch (StripeException e) {
+            throw new PaymentException("Failed to capture payment intent: " + e.getMessage(), e);
+        }
 
         payment.setStatus(PaymentStatus.COMPLETED);
         payment.setCollectedTimestamp(Instant.now());
 
         Payment savedPayment = paymentRepository.save(payment);
         log.info("Payment captured successfully for shopping request: {}", shoppingRequestId);
+
+        return savedPayment;
+    }
+
+    @Transactional
+    public Payment cancelPayment(Long shoppingRequestId) throws PaymentException {
+        log.info("Cancelling payment for shopping request: {}", shoppingRequestId);
+
+        Payment payment = paymentRepository.findByShoppingRequestId(shoppingRequestId)
+                .orElseThrow(() -> new PaymentException("Payment not found for shopping request: " + shoppingRequestId));
+
+        if (payment.getStatus() != PaymentStatus.AUTHORIZED && payment.getStatus() != PaymentStatus.PENDING) {
+            throw new PaymentException("Cannot cancel payment in status: " + payment.getStatus() + ". Payment must be AUTHORIZED or PENDING.");
+        }
+
+        Stripe.apiKey = stripeSecretKey;
+
+        PaymentIntent paymentIntent;
+        try {
+            paymentIntent = PaymentIntent.retrieve(payment.getStripePaymentIntentId());
+        } catch (StripeException e) {
+            throw new PaymentException("Failed to retrieve payment intent: " + e.getMessage(), e);
+        }
+
+        if ("requires_capture".equals(paymentIntent.getStatus())) {
+            try {
+                paymentIntent.cancel();
+            } catch (StripeException e) {
+                throw new PaymentException("Failed to cancel payment intent: " + e.getMessage(), e);
+            }
+            log.info("Pre-authorized payment intent cancelled for shopping request: {}", shoppingRequestId);
+        } else if ("requires_payment_method".equals(paymentIntent.getStatus()) ||
+                   "requires_confirmation".equals(paymentIntent.getStatus()) ||
+                   "requires_action".equals(paymentIntent.getStatus())) {
+            try {
+                paymentIntent.cancel();
+            } catch (StripeException e) {
+                throw new PaymentException("Failed to cancel pending payment intent: " + e.getMessage(), e);
+            }
+            log.info("Pending payment intent cancelled for shopping request: {}", shoppingRequestId);
+        } else {
+            log.warn("Payment intent status {} does not require cancellation for shopping request: {}",
+                     paymentIntent.getStatus(), shoppingRequestId);
+        }
+
+        payment.setStatus(PaymentStatus.CANCELLED);
+
+        Payment savedPayment = paymentRepository.save(payment);
+        log.info("Payment cancelled successfully for shopping request: {}", shoppingRequestId);
 
         return savedPayment;
     }

@@ -471,7 +471,7 @@
         }
 
         async function completeShopping() {
-            if (!confirm('Have you completed the shopping and are ready to deliver?')) return;
+            if (!confirm('Have you completed and delivered this shopping request?')) return;
 
             try {
                 const response = await fetch(`/api/shopping-requests/${requestId}/complete`, {

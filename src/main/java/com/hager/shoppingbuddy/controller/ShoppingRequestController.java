@@ -27,7 +27,7 @@ public class ShoppingRequestController {
     public ResponseEntity<ShoppingRequestResponse> createShoppingRequest(
             @Valid @RequestBody ShoppingRequestCreateRequest request,
             Authentication authentication
-    ) throws CustomerNotFoundException, UnauthorizedRoleException {
+    ) throws CustomerNotFoundException, UnauthorizedRoleException, PaymentException {
 
         verifyUserRole(authentication, UserRole.CUSTOMER);
         log.info("Creating shopping request for user: {}", authentication.getName());

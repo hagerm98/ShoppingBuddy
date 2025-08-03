@@ -4,7 +4,6 @@ import com.hager.shoppingbuddy.dto.*;
 import com.hager.shoppingbuddy.entity.*;
 import com.hager.shoppingbuddy.exception.*;
 import com.hager.shoppingbuddy.repository.*;
-import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,7 +28,7 @@ public class ShoppingRequestService {
 
     @Transactional
     public ShoppingRequestResponse createShoppingRequest(String customerEmail, ShoppingRequestCreateRequest request)
-            throws CustomerNotFoundException, StripeException {
+            throws CustomerNotFoundException, PaymentException {
         log.info("Creating shopping request for customer: {}", customerEmail);
 
         Customer customer = customerRepository.findByUserEmail(customerEmail)
@@ -207,6 +206,15 @@ public class ShoppingRequestService {
 
         request.setStatus(ShoppingRequestStatus.CANCELLED);
         request.setUpdatedAt(Instant.now());
+
+        try {
+            Payment payment = paymentService.cancelPayment(requestId);
+            request.setPaymentStatus(payment.getStatus());
+            log.info("Payment successfully cancelled for shopping request: {}", requestId);
+        } catch (Exception e) {
+            log.error("Failed to cancel payment for shopping request: {}", requestId, e);
+            request.setPaymentStatus(PaymentStatus.FAILED);
+        }
 
         ShoppingRequest savedRequest = shoppingRequestRepository.save(request);
 

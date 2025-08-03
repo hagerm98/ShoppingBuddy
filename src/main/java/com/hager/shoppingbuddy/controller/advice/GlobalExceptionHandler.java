@@ -73,6 +73,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
+    @ExceptionHandler(PaymentException.class)
+    public RedirectView handlePaymentException(PaymentException ex) {
+        log.error("PaymentException: {}", ex.getMessage());
+        return createErrorRedirect(
+                "Payment Error",
+                "An error occurred while processing your payment: " + ex.getMessage()
+        );
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public RedirectView handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();

@@ -23,6 +23,35 @@
                 </div>
             </div>
 
+            <div id="paymentWarningAlert" class="row mb-4" style="display: none;">
+                <div class="col-12">
+                    <div class="alert alert-warning alert-dismissible border-start border-warning border-4 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle fa-2x text-warning me-3"></i>
+                            <div class="flex-grow-1">
+                                <h5 class="alert-heading mb-2">
+                                    <i class="fas fa-credit-card me-2"></i>Payment Authorization Required
+                                </h5>
+                                <p class="mb-2">
+                                    <strong>Your shopping request is not visible to shoppers until payment is authorized.</strong>
+                                </p>
+                                <p class="mb-3 text-muted">
+                                    Complete the payment process now to make your request available for shoppers to accept.
+                                </p>
+                                <a href="#" onclick="completePayment()" class="btn btn-success me-2">
+                                    <i class="fas fa-credit-card me-2"></i>Complete Payment Now
+                                </a>
+                                <small class="text-muted">
+                                    <i class="fas fa-shield-alt me-1"></i>
+                                    Secure payment processing with Stripe
+                                </small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card">
@@ -316,6 +345,13 @@
                 document.getElementById('shopperName').textContent = request.shopperName;
             }
 
+            if (currentUser && currentUser.role === 'CUSTOMER' &&
+                request.customerId === currentUser.id &&
+                request.paymentStatus !== 'AUTHORIZED' &&
+                request.status === 'PENDING') {
+                showPaymentWarning();
+            }
+
             displayItems(request.items);
         }
 
@@ -369,7 +405,8 @@
             }
 
             if (isShopper) {
-                if (currentRequest.status === 'PENDING' && !currentRequest.shopperId) {
+                if (currentRequest.status === 'PENDING' && !currentRequest.shopperId &&
+                    currentRequest.paymentStatus === 'AUTHORIZED') {
                     actionButtons.appendChild(createActionButton('Accept Request', 'btn-success', 'fas fa-check', () => acceptRequest()));
                 }
 
@@ -437,7 +474,7 @@
                 });
 
                 if (response.ok) {
-                    showAlert('success', 'Request abandoned successfully. Redirecting to browse requests...');
+                    showAlert('success', 'Request abandoned successfully. Redirecting to your request history...');
 
                     setTimeout(() => {
                         window.location.href = '/shopping-requests';
@@ -924,6 +961,11 @@
             `;
 
             alertContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showPaymentWarning() {
+            const paymentWarningAlert = document.getElementById('paymentWarningAlert');
+            paymentWarningAlert.style.display = 'block';
         }
 
         window.addEventListener('beforeunload', function() {

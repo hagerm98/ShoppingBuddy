@@ -65,8 +65,9 @@ public class ShoppingRequestService {
     }
 
     public List<ShoppingRequestResponse> getAllPendingRequests() {
-        log.info("Retrieving all pending shopping requests");
-        List<ShoppingRequest> pendingRequests = shoppingRequestRepository.findByStatusOrderByCreatedAtDesc(ShoppingRequestStatus.PENDING);
+        log.info("Retrieving all pending shopping requests with authorized payment");
+        List<ShoppingRequest> pendingRequests = shoppingRequestRepository.findByStatusAndPaymentStatusOrderByCreatedAtDesc(
+                ShoppingRequestStatus.PENDING, PaymentStatus.AUTHORIZED);
         return pendingRequests.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
@@ -114,6 +115,10 @@ public class ShoppingRequestService {
 
         if (request.getStatus() != ShoppingRequestStatus.PENDING) {
             throw new InvalidShoppingRequestActionException("Shopping request is not in PENDING status");
+        }
+
+        if (request.getPaymentStatus() != PaymentStatus.AUTHORIZED) {
+            throw new InvalidShoppingRequestActionException("Shopping request payment must be authorized before acceptance");
         }
 
         request.setShopper(shopper);

@@ -135,18 +135,40 @@
                 ? (request.shopperName ? `<div class="mb-2"><strong>Shopper:</strong> ${request.shopperName}</div>` : '')
                 : (request.customerName ? `<div class="mb-2"><strong>Customer:</strong> ${request.customerName}</div>` : '');
 
+            const shouldShowPaymentWarning = isCustomer &&
+                request.paymentStatus !== 'AUTHORIZED' &&
+                request.status === 'PENDING';
+
+            const paymentWarningBanner = shouldShowPaymentWarning ? `
+                <div class="alert alert-warning py-2 px-3 mb-2 border-0">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        <small class="mb-0">
+                            <strong>Payment Required:</strong> Complete payment to make visible to shoppers
+                        </small>
+                    </div>
+                </div>
+            ` : '';
+
             col.innerHTML = `
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm ${shouldShowPaymentWarning ? 'border-warning' : ''}">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="mb-0">Request #${request.id}</h6>
                         <span class="badge ${statusBadgeClass}">${request.status}</span>
                     </div>
                     <div class="card-body">
+                        ${paymentWarningBanner}
                         <div class="mb-2">
                             <strong>Items:</strong> ${request.items.length} item(s)
                         </div>
                         <div class="mb-2">
                             <strong>Total:</strong> €${totalAmount}
+                        </div>
+                        <div class="mb-2">
+                            <strong>Payment Status:</strong>
+                            <span class="badge ${getPaymentStatusBadgeClass(request.paymentStatus || 'PENDING')}">
+                                ${request.paymentStatus || 'PENDING'}
+                            </span>
                         </div>
                         <div class="mb-2">
                             <strong>Created:</strong> ${formattedDate}
@@ -161,7 +183,12 @@
                         <button class="btn btn-outline-primary btn-sm" onclick="viewRequestDetails(${request.id})">
                             <i class="fas fa-eye me-1"></i>View Details
                         </button>
-                        ${isCustomer && request.status === 'PENDING' ? `
+                        ${shouldShowPaymentWarning ? `
+                            <button class="btn btn-success btn-sm ms-2" onclick="completePayment(${request.id})">
+                                <i class="fas fa-credit-card me-1"></i>Pay Now
+                            </button>
+                        ` : ''}
+                        ${isCustomer && request.status === 'PENDING' && !shouldShowPaymentWarning ? `
                             <button class="btn btn-outline-danger btn-sm ms-2" onclick="cancelRequest(${request.id})">
                                 <i class="fas fa-times me-1"></i>Cancel
                             </button>
@@ -185,6 +212,15 @@
                 case 'IN_PROGRESS': return 'bg-primary';
                 case 'COMPLETED': return 'bg-success';
                 case 'CANCELLED': return 'bg-secondary';
+                default: return 'bg-secondary';
+            }
+        }
+
+        function getPaymentStatusBadgeClass(paymentStatus) {
+            switch (paymentStatus) {
+                case 'AUTHORIZED': return 'bg-success';
+                case 'PENDING': return 'bg-warning text-dark';
+                case 'FAILED': return 'bg-danger';
                 default: return 'bg-secondary';
             }
         }
@@ -254,6 +290,10 @@
                 console.error('Error cancelling request:', error);
                 showAlert('danger', 'An error occurred while cancelling the request. Please try again.');
             }
+        }
+
+        function completePayment(requestId) {
+            window.location.href = `/checkout/${requestId}/payment`;
         }
 
         function showAlert(type, message) {

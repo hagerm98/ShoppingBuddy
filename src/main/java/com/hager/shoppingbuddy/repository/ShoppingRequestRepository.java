@@ -1,5 +1,6 @@
 package com.hager.shoppingbuddy.repository;
 
+import com.hager.shoppingbuddy.entity.PaymentStatus;
 import com.hager.shoppingbuddy.entity.ShoppingRequest;
 import com.hager.shoppingbuddy.entity.ShoppingRequestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,6 +15,8 @@ public interface ShoppingRequestRepository extends JpaRepository<ShoppingRequest
     Optional<ShoppingRequest> findByIdAndShopperId(Long id, Long shopperId);
 
     List<ShoppingRequest> findByStatusOrderByCreatedAtDesc(ShoppingRequestStatus status);
+
+    List<ShoppingRequest> findByStatusAndPaymentStatusOrderByCreatedAtDesc(ShoppingRequestStatus status, PaymentStatus paymentStatus);
 
     List<ShoppingRequest> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
 

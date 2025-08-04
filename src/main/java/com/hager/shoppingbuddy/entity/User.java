@@ -2,6 +2,7 @@ package com.hager.shoppingbuddy.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,16 +27,28 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_seq")
     private Long id;
 
+    @NotBlank(message = "First name cannot be blank")
+    @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
+    @Pattern(regexp = "^[A-Za-z\\s]+$", message = "First name can only contain letters and spaces")
     private String firstName;
 
+    @NotBlank(message = "Last name cannot be blank")
+    @Size(min = 2, max = 50, message = "Last name must be between 2 and 50 characters")
+    @Pattern(regexp = "^[A-Za-z\\s]+$", message = "Last name can only contain letters and spaces")
     private String lastName;
 
+    @NotBlank(message = "Email cannot be blank")
+    @Email(message = "Email must be valid")
+    @Size(max = 100, message = "Email must not exceed 100 characters")
     @Column(unique = true)
     private String email;
 
+    @NotBlank(message = "Phone number cannot be blank")
+    @Pattern(regexp = "^\\+?[1-9]\\d{1,14}$", message = "Phone number must be valid")
     @Column(unique = true)
     private String phoneNumber;
 
+    @NotBlank(message = "Password hash cannot be blank")
     @JsonIgnore
     @Basic(fetch =  FetchType.LAZY)
     private String passwordHash;
@@ -46,10 +59,12 @@ public class User implements UserDetails {
 
     private Instant lastPasswordChange;
 
+    @NotNull(message = "Created date cannot be null")
     private Instant createdAt;
 
     private Instant updatedAt;
 
+    @NotNull(message = "User role cannot be null")
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
@@ -71,7 +86,6 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        // No account expiration for ShoppingBuddy users
         return true;
     }
 

@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Slf4j
@@ -59,7 +60,7 @@ public class PaymentService {
         Payment payment = Payment.builder()
                 .shoppingRequestId(shoppingRequestId)
                 .customerId(customerId)
-                .amount(amount)
+                .amount(BigDecimal.valueOf(amount))
                 .status(PaymentStatus.PENDING)
                 .stripePaymentIntentId(paymentIntent.getId())
                 .stripeClientSecret(paymentIntent.getClientSecret())

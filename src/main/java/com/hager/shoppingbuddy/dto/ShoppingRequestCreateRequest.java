@@ -34,4 +34,12 @@ public class ShoppingRequestCreateRequest {
     @NotNull(message = "Delivery fee is required")
     @DecimalMin(value = "8.0", message = "Delivery fee must be at least 8 euros")
     private Double deliveryFee;
+
+    @NotBlank(message = "Store name is required")
+    @Size(max = 200, message = "Store name cannot exceed 200 characters")
+    private String storeName;
+
+    @NotBlank(message = "Store address is required")
+    @Size(max = 500, message = "Store address cannot exceed 500 characters")
+    private String storeAddress;
 }

@@ -31,6 +31,10 @@ public class ShoppingRequestResponse {
     private PaymentStatus paymentStatus;
     private Double latitude;
     private Double longitude;
+    private String storeName;
+    private String storeAddress;
+    private Double storeLatitude;
+    private Double storeLongitude;
     private String stripeClientSecret;
     private String stripePaymentIntentId;
 }

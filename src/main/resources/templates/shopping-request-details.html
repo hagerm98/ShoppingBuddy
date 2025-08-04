@@ -125,6 +125,21 @@
                             <p id="deliveryAddress" class="mb-0"></p>
                         </div>
                     </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-store me-2"></i>Store Information
+                            </h5>
+                            <button id="editStoreBtn" class="btn btn-sm btn-outline-primary" style="display: none;">
+                                <i class="fas fa-edit me-1"></i>Edit Store
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Store Name:</strong> <span id="storeName"></span></p>
+                            <p class="mb-0"><strong>Store Address:</strong> <span id="storeAddress"></span></p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="col-lg-4">
@@ -249,6 +264,37 @@
         </div>
     </div>
 
+    <div class="modal fade" id="editStoreModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Store Information</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editStoreName" class="form-label">Store Name *</label>
+                        <input type="text" class="form-control" id="editStoreName" required maxlength="200"
+                               placeholder="e.g. Tesco Express, Lidl, SuperValu">
+                        <div class="form-text">Name of the store where shopping should be done</div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editStoreAddress" class="form-label">Store Address *</label>
+                        <textarea id="editStoreAddress" class="form-control" rows="3" required maxlength="500"
+                                  placeholder="Complete address of the preferred store"></textarea>
+                        <div class="form-text">Complete address of the preferred store</div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveStoreChanges()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer th:replace="~{layout/footer :: footer}"></footer>
     <script th:replace="~{layout/footer :: scripts}"></script>
 
@@ -335,6 +381,8 @@
             document.getElementById('estimatedPrice').textContent = request.estimatedItemsPrice.toFixed(2);
             document.getElementById('deliveryFee').textContent = request.deliveryFee.toFixed(2);
             document.getElementById('deliveryAddress').textContent = request.deliveryAddress;
+            document.getElementById('storeName').textContent = request.storeName || 'N/A';
+            document.getElementById('storeAddress').textContent = request.storeAddress || 'N/A';
 
             const statusBadge = document.getElementById('statusBadge');
             statusBadge.textContent = request.status;
@@ -401,6 +449,7 @@
                 if (currentRequest.status === 'PENDING') {
                     document.getElementById('editItemsBtn').style.display = 'inline-block';
                     document.getElementById('editAddressBtn').style.display = 'inline-block';
+                    document.getElementById('editStoreBtn').style.display = 'inline-block';
                 }
             }
 
@@ -425,12 +474,16 @@
         function setupEditButtonListeners() {
             const editItemsBtn = document.getElementById('editItemsBtn');
             const editAddressBtn = document.getElementById('editAddressBtn');
+            const editStoreBtn = document.getElementById('editStoreBtn');
 
             if (editItemsBtn) {
                 editItemsBtn.addEventListener('click', openEditItemsModal);
             }
             if (editAddressBtn) {
                 editAddressBtn.addEventListener('click', openEditAddressModal);
+            }
+            if (editStoreBtn) {
+                editStoreBtn.addEventListener('click', openEditStoreModal);
             }
         }
 
@@ -790,6 +843,66 @@
             } catch (error) {
                 console.error('Error updating address:', error);
                 showAlert('danger', 'An error occurred while updating the address.');
+            }
+        }
+
+        function openEditStoreModal() {
+            document.getElementById('editStoreName').value = currentRequest.storeName || '';
+            document.getElementById('editStoreAddress').value = currentRequest.storeAddress || '';
+            const modal = new bootstrap.Modal(document.getElementById('editStoreModal'));
+            modal.show();
+        }
+
+        async function saveStoreChanges() {
+            const newStoreName = document.getElementById('editStoreName').value.trim();
+            const newStoreAddress = document.getElementById('editStoreAddress').value.trim();
+
+            if (!newStoreName) {
+                showAlert('danger', 'Store name cannot be empty.');
+                return;
+            }
+
+            if (!newStoreAddress) {
+                showAlert('danger', 'Store address cannot be empty.');
+                return;
+            }
+
+            const updateRequest = {
+                items: currentRequest.items,
+                deliveryAddress: currentRequest.deliveryAddress,
+                estimatedItemsPrice: currentRequest.estimatedItemsPrice,
+                deliveryFee: currentRequest.deliveryFee,
+                storeName: newStoreName,
+                storeAddress: newStoreAddress
+            };
+
+            try {
+                const response = await fetch(`/api/shopping-requests/${requestId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateRequest)
+                });
+
+                if (response.ok) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editStoreModal'));
+                    modal.hide();
+                    showAlert('success', 'Store information updated successfully.');
+                    await loadRequestDetails();
+                } else {
+                    let errorMessage = 'Failed to update store information.';
+                    try {
+                        const errorText = await response.text();
+                        if (errorText) {
+                            errorMessage = errorText;
+                        }
+                    } catch (e) {
+                        console.error('Error reading response text:', e);
+                    }
+                    showAlert('danger', errorMessage);
+                }
+            } catch (error) {
+                console.error('Error updating store information:', error);
+                showAlert('danger', 'An error occurred while updating store information.');
             }
         }
 

@@ -36,14 +36,19 @@ public class ShoppingRequestService {
         Customer customer = customerRepository.findByUserEmail(customerEmail)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found with email: " + customerEmail));
 
-        com.google.maps.model.LatLng location = geocodingService.getLatLngFromAddress(request.getDeliveryAddress());
+        com.google.maps.model.LatLng deliveryLocation = geocodingService.getLatLngFromAddress(request.getDeliveryAddress());
+        com.google.maps.model.LatLng storeLocation = geocodingService.getLatLngFromAddress(request.getStoreAddress());
 
         ShoppingRequest shoppingRequest = ShoppingRequest.builder()
                 .customer(customer)
                 .status(ShoppingRequestStatus.PENDING)
                 .deliveryAddress(request.getDeliveryAddress())
-                .latitude(location != null ? location.lat : null)
-                .longitude(location != null ? location.lng : null)
+                .latitude(deliveryLocation != null ? deliveryLocation.lat : null)
+                .longitude(deliveryLocation != null ? deliveryLocation.lng : null)
+                .storeName(request.getStoreName())
+                .storeAddress(request.getStoreAddress())
+                .storeLatitude(storeLocation != null ? storeLocation.lat : null)
+                .storeLongitude(storeLocation != null ? storeLocation.lng : null)
                 .estimatedItemsPrice(request.getEstimatedItemsPrice())
                 .deliveryFee(request.getDeliveryFee())
                 .paymentStatus(PaymentStatus.PENDING)
@@ -288,11 +293,17 @@ public class ShoppingRequestService {
         shoppingRequest.setDeliveryAddress(request.getDeliveryAddress());
         shoppingRequest.setEstimatedItemsPrice(request.getEstimatedItemsPrice());
         shoppingRequest.setDeliveryFee(request.getDeliveryFee());
+        shoppingRequest.setStoreName(request.getStoreName());
+        shoppingRequest.setStoreAddress(request.getStoreAddress());
         shoppingRequest.setUpdatedAt(Instant.now());
 
-        com.google.maps.model.LatLng location = geocodingService.getLatLngFromAddress(request.getDeliveryAddress());
-        shoppingRequest.setLatitude(location != null ? location.lat : null);
-        shoppingRequest.setLongitude(location != null ? location.lng : null);
+        com.google.maps.model.LatLng deliveryLocation = geocodingService.getLatLngFromAddress(request.getDeliveryAddress());
+        shoppingRequest.setLatitude(deliveryLocation != null ? deliveryLocation.lat : null);
+        shoppingRequest.setLongitude(deliveryLocation != null ? deliveryLocation.lng : null);
+
+        com.google.maps.model.LatLng storeLocation = geocodingService.getLatLngFromAddress(request.getStoreAddress());
+        shoppingRequest.setStoreLatitude(storeLocation != null ? storeLocation.lat : null);
+        shoppingRequest.setStoreLongitude(storeLocation != null ? storeLocation.lng : null);
 
         ShoppingRequest savedRequest = populateShoppingRequestItems(shoppingRequest, request.getItems());
 
@@ -378,6 +389,10 @@ public class ShoppingRequestService {
                 .paymentStatus(request.getPaymentStatus())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
+                .storeName(request.getStoreName())
+                .storeAddress(request.getStoreAddress())
+                .storeLatitude(request.getStoreLatitude())
+                .storeLongitude(request.getStoreLongitude())
                 .stripeClientSecret(payment != null ? payment.getStripeClientSecret() : null)
                 .stripePaymentIntentId(payment != null ? payment.getStripePaymentIntentId() : null)
                 .build();

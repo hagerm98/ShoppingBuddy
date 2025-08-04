@@ -147,6 +147,8 @@ public class ShoppingRequestNotificationService {
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
                     <h3>Request Details</h3>
                     <p><strong>Request ID:</strong> #%d</p>
+                    <p><strong>Store:</strong> %s</p>
+                    <p><strong>Store Address:</strong> %s</p>
                     <p><strong>Delivery Address:</strong> %s</p>
                     <p><strong>Estimated Items Price:</strong> €%.2f</p>
                     <p><strong>Delivery Fee:</strong> €%.2f</p>
@@ -162,6 +164,8 @@ public class ShoppingRequestNotificationService {
            \s""",
             customer.getFirstName(),
             request.getId(),
+            request.getStoreName() != null ? request.getStoreName() : "Not specified",
+            request.getStoreAddress() != null ? request.getStoreAddress() : "Not specified",
             request.getDeliveryAddress(),
             request.getEstimatedItemsPrice(),
             request.getDeliveryFee(),
@@ -187,6 +191,8 @@ public class ShoppingRequestNotificationService {
                \s
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
                     <h3>Request Details</h3>
+                    <p><strong>Store:</strong> %s</p>
+                    <p><strong>Store Address:</strong> %s</p>
                     <p><strong>Delivery Address:</strong> %s</p>
                     <p><strong>Estimated Items Price:</strong> €%.2f</p>
                     <p><strong>Delivery Fee:</strong> €%.2f</p>
@@ -204,6 +210,8 @@ public class ShoppingRequestNotificationService {
             shopper.getFirstName(),
             shopper.getLastName(),
             shopper.getEmail(),
+            request.getStoreName() != null ? request.getStoreName() : "Not specified",
+            request.getStoreAddress() != null ? request.getStoreAddress() : "Not specified",
             request.getDeliveryAddress(),
             request.getEstimatedItemsPrice(),
             request.getDeliveryFee(),
@@ -228,6 +236,8 @@ public class ShoppingRequestNotificationService {
                \s
                 <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;">
                     <h3>Request Details</h3>
+                    <p><strong>Store:</strong> %s</p>
+                    <p><strong>Store Address:</strong> %s</p>
                     <p><strong>Delivery Address:</strong> %s</p>
                     <p><strong>Estimated Items Price:</strong> €%.2f</p>
                     <p><strong>Delivery Fee:</strong> €%.2f</p>
@@ -245,6 +255,8 @@ public class ShoppingRequestNotificationService {
             customer.getFirstName(),
             customer.getLastName(),
             customer.getEmail(),
+            request.getStoreName() != null ? request.getStoreName() : "Not specified",
+            request.getStoreAddress() != null ? request.getStoreAddress() : "Not specified",
             request.getDeliveryAddress(),
             request.getEstimatedItemsPrice(),
             request.getDeliveryFee(),
@@ -267,6 +279,9 @@ public class ShoppingRequestNotificationService {
                 </div>
                \s
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <h3>Request Details</h3>
+                    <p><strong>Store:</strong> %s</p>
+                    <p><strong>Store Address:</strong> %s</p>
                     <p><strong>Delivery Address:</strong> %s</p>
                     <p><strong>Estimated Items Price:</strong> €%.2f</p>
                     <p><strong>Delivery Fee:</strong> €%.2f</p>
@@ -283,6 +298,8 @@ public class ShoppingRequestNotificationService {
             shopper.getFirstName(),
             shopper.getLastName(),
             request.getId(),
+            request.getStoreName() != null ? request.getStoreName() : "Not specified",
+            request.getStoreAddress() != null ? request.getStoreAddress() : "Not specified",
             request.getDeliveryAddress(),
             request.getEstimatedItemsPrice(),
             request.getDeliveryFee(),
@@ -301,16 +318,19 @@ public class ShoppingRequestNotificationService {
                \s
                 <div style="background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #28a745;">
                     <h3>Shopping Completed</h3>
-                    <p>Your items have been purchased and your shopper will be delivering them to your address shortly.</p>
+                    <p>Your items have been purchased and delivered by your shopper. If you have any further queries please contact our support</p>
                 </div>
                \s
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <h3>Request Details</h3>
+                    <p><strong>Store:</strong> %s</p>
+                    <p><strong>Store Address:</strong> %s</p>
                     <p><strong>Delivery Address:</strong> %s</p>
                     <p><strong>Estimated Items Price:</strong> €%.2f</p>
                     <p><strong>Delivery Fee:</strong> €%.2f</p>
                 </div>
                \s
-                <p>Please be available to receive your delivery. You can contact your shopper if you have any questions.</p>
+                <p>Thanks for shopping with us!</p>
                 <p><a href="%s/shopping-requests/%d" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Request Details</a></p>
                \s
                 <p>Thank you for using ShoppingBuddy!</p>
@@ -322,6 +342,8 @@ public class ShoppingRequestNotificationService {
             shopper.getFirstName(),
             shopper.getLastName(),
             request.getId(),
+            request.getStoreName() != null ? request.getStoreName() : "Not specified",
+            request.getStoreAddress() != null ? request.getStoreAddress() : "Not specified",
             request.getDeliveryAddress(),
             request.getEstimatedItemsPrice(),
             request.getDeliveryFee(),
@@ -344,6 +366,9 @@ public class ShoppingRequestNotificationService {
                 </div>
                \s
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <h3>Request Details</h3>
+                    <p><strong>Store:</strong> %s</p>
+                    <p><strong>Store Address:</strong> %s</p>
                     <p><strong>Delivery Address:</strong> %s</p>
                     <p><strong>Customer Contact:</strong> %s</p>
                 </div>
@@ -360,6 +385,8 @@ public class ShoppingRequestNotificationService {
             request.getId(),
             customer.getFirstName(),
             customer.getLastName(),
+            request.getStoreName() != null ? request.getStoreName() : "Not specified",
+            request.getStoreAddress() != null ? request.getStoreAddress() : "Not specified",
             request.getDeliveryAddress(),
             customer.getEmail(),
             baseUrl,
@@ -384,7 +411,10 @@ public class ShoppingRequestNotificationService {
                 </div>
                \s
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <h3>Request Details</h3>
                     <p><strong>Request ID:</strong> #%d</p>
+                    <p><strong>Store:</strong> %s</p>
+                    <p><strong>Store Address:</strong> %s</p>
                     <p><strong>Delivery Address:</strong> %s</p>
                     <p><strong>Estimated Items Price:</strong> €%.2f</p>
                 </div>
@@ -406,6 +436,8 @@ public class ShoppingRequestNotificationService {
                     otherParty.getLastName(),
                     otherParty.getEmail()) : "",
             request.getId(),
+            request.getStoreName() != null ? request.getStoreName() : "Not specified",
+            request.getStoreAddress() != null ? request.getStoreAddress() : "Not specified",
             request.getDeliveryAddress(),
             request.getEstimatedItemsPrice(),
             isCustomer ?
@@ -429,6 +461,8 @@ public class ShoppingRequestNotificationService {
                \s
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
                     <h3>Updated Request Details</h3>
+                    <p><strong>Store:</strong> %s</p>
+                    <p><strong>Store Address:</strong> %s</p>
                     <p><strong>Delivery Address:</strong> %s</p>
                     <p><strong>Estimated Items Price:</strong> €%.2f</p>
                     <p><strong>Delivery Fee:</strong> €%.2f</p>
@@ -445,6 +479,8 @@ public class ShoppingRequestNotificationService {
             customer.getFirstName(),
             customer.getLastName(),
             request.getId(),
+            request.getStoreName() != null ? request.getStoreName() : "Not specified",
+            request.getStoreAddress() != null ? request.getStoreAddress() : "Not specified",
             request.getDeliveryAddress(),
             request.getEstimatedItemsPrice(),
             request.getDeliveryFee(),
@@ -469,6 +505,8 @@ public class ShoppingRequestNotificationService {
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
                     <h3>Request Details</h3>
                     <p><strong>Request ID:</strong> #%d</p>
+                    <p><strong>Store:</strong> %s</p>
+                    <p><strong>Store Address:</strong> %s</p>
                     <p><strong>Delivery Address:</strong> %s</p>
                     <p><strong>Estimated Items Price:</strong> €%.2f</p>
                     <p><strong>Delivery Fee:</strong> €%.2f</p>
@@ -486,6 +524,8 @@ public class ShoppingRequestNotificationService {
             request.getId(),
             shopperEmail,
             request.getId(),
+            request.getStoreName() != null ? request.getStoreName() : "Not specified",
+            request.getStoreAddress() != null ? request.getStoreAddress() : "Not specified",
             request.getDeliveryAddress(),
             request.getEstimatedItemsPrice(),
             request.getDeliveryFee(),

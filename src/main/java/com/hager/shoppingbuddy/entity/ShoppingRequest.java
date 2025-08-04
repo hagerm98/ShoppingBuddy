@@ -52,6 +52,14 @@ public class ShoppingRequest {
 
     private Double longitude;
 
+    private String storeName;
+
+    private String storeAddress;
+
+    private Double storeLatitude;
+
+    private Double storeLongitude;
+
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 }

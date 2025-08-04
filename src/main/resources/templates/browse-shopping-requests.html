@@ -41,7 +41,20 @@
             </div>
         </div>
         <div class="col-lg-7">
-            <div id="map" class="shadow-sm" style="height: 80vh; border-radius: 0.375rem;"></div>
+            <div class="position-relative">
+                <div id="map" class="shadow-sm" style="height: 80vh; border-radius: 0.375rem;"></div>
+                <div class="position-absolute top-0 end-0 m-3 bg-white p-3 rounded shadow-sm" style="z-index: 1000;">
+                    <h6 class="mb-2">Map Legend</h6>
+                    <div class="d-flex align-items-center mb-1">
+                        <div style="background-color: #007bff; width: 12px; height: 12px; border-radius: 50%; border: 1px solid white; margin-right: 8px;"></div>
+                        <small>Delivery Location</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div style="background-color: #28a745; width: 12px; height: 12px; border-radius: 50%; border: 1px solid white; margin-right: 8px;"></div>
+                        <small>Store Location</small>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -67,6 +80,18 @@
                         <p><i class="fas fa-box me-2 text-primary"></i>Est. Items Price: <strong class="text-success">€<span id="modalEstimatedPrice"></span></strong></p>
                         <p><i class="fas fa-truck me-2 text-primary"></i>Delivery Fee: <strong class="text-success">€<span id="modalDeliveryFee"></span></strong></p>
                         <p><i class="fas fa-euro-sign me-2 text-primary"></i>Total Amount: <strong class="text-success h5">€<span id="modalTotalAmount"></span></strong></p>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6 class="text-muted">Store Information</h6>
+                        <div class="card bg-light">
+                            <div class="card-body py-2">
+                                <p class="mb-1"><i class="fas fa-store me-2 text-success"></i><strong>Store:</strong> <span id="modalStoreName"></span></p>
+                                <p class="mb-0"><i class="fas fa-map-marker-alt me-2 text-success"></i><strong>Address:</strong> <span id="modalStoreAddress"></span></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -154,6 +179,10 @@
                 </div>
                 <p class="mb-1"><i class="fas fa-user me-2 text-muted"></i>${request.customerName}</p>
                 <p class="mb-2"><i class="fas fa-map-marker-alt me-2 text-muted"></i>${request.deliveryAddress}</p>
+                <div class="mb-2">
+                    <p class="mb-1"><i class="fas fa-store me-2 text-muted"></i><strong>Store:</strong> ${request.storeName || 'Not specified'}</p>
+                    <p class="mb-0 text-muted small ms-4">${request.storeAddress || 'Address not specified'}</p>
+                </div>
                 <div class="d-flex w-100 justify-content-between align-items-center mt-2">
                     <div>
                         <span class="badge bg-primary me-2">Items: ${request.items.length}</span>
@@ -180,25 +209,70 @@
         markers = {};
 
         const validRequests = requests.filter(r => r.latitude != null && r.longitude != null);
+        const validStoreRequests = requests.filter(r => r.storeLatitude != null && r.storeLongitude != null);
 
         if (validRequests.length > 0) {
-            const bounds = L.latLngBounds(validRequests.map(r => [r.latitude, r.longitude]));
+            const allPoints = [...validRequests.map(r => [r.latitude, r.longitude])];
+            if (validStoreRequests.length > 0) {
+                allPoints.push(...validStoreRequests.map(r => [r.storeLatitude, r.storeLongitude]));
+            }
+            const bounds = L.latLngBounds(allPoints);
             map.fitBounds(bounds.pad(0.1));
         }
 
-        requests.forEach(request => {
-            if (request.latitude && request.longitude) {
-                const marker = L.marker([request.latitude, request.longitude]).addTo(map);
-                const totalAmount = (request.estimatedItemsPrice + request.deliveryFee).toFixed(2);
-                const popupContent = `
-                    <b>Request #${request.id}</b><br>
-                    ${request.deliveryAddress}<br>
-                    Total: €${totalAmount}<br>
-                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="openModalForRequest(${request.id})">View Details</button>
-                `;
-                marker.bindPopup(popupContent);
+        const deliveryIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: '<div style="background-color: #007bff; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
 
-                marker.on('click', () => {
+        const storeIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: '<div style="background-color: #28a745; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        requests.forEach(request => {
+            const totalAmount = (request.estimatedItemsPrice + request.deliveryFee).toFixed(2);
+
+            // Add connecting line between store and delivery locations
+            if (request.latitude && request.longitude && request.storeLatitude && request.storeLongitude) {
+                const routeLine = L.polyline([
+                    [request.storeLatitude, request.storeLongitude],
+                    [request.latitude, request.longitude]
+                ], {
+                    color: '#6c757d',
+                    weight: 3,
+                    opacity: 0.7,
+                    dashArray: '5, 10',
+                    className: `route-line-${request.id}`
+                }).addTo(map);
+
+                routeLine.bindTooltip(`Route for Request #${request.id}`, {
+                    permanent: false,
+                    direction: 'center'
+                });
+
+                markers[`route-${request.id}`] = routeLine;
+            }
+
+            // Add delivery location marker (blue)
+            if (request.latitude && request.longitude) {
+                const deliveryMarker = L.marker([request.latitude, request.longitude], { icon: deliveryIcon }).addTo(map);
+                const deliveryPopupContent = `
+                    <div style="min-width: 200px;">
+                        <b>Delivery for Request #${request.id}</b><br>
+                        <i class="fas fa-map-marker-alt me-1"></i> ${request.deliveryAddress}<br>
+                        <i class="fas fa-user me-1"></i> ${request.customerName}<br>
+                        <i class="fas fa-euro-sign me-1"></i> Total: €${totalAmount}<br>
+                        <button class="btn btn-sm btn-outline-primary mt-2" onclick="openModalForRequest(${request.id})">View Details</button>
+                    </div>
+                `;
+                deliveryMarker.bindPopup(deliveryPopupContent);
+
+                deliveryMarker.on('click', () => {
                     const card = document.getElementById(`request-card-${request.id}`);
                     if (card) {
                         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -207,7 +281,33 @@
                     }
                 });
 
-                markers[request.id] = marker;
+                markers[`delivery-${request.id}`] = deliveryMarker;
+            }
+
+            // Add store location marker (green)
+            if (request.storeLatitude && request.storeLongitude) {
+                const storeMarker = L.marker([request.storeLatitude, request.storeLongitude], { icon: storeIcon }).addTo(map);
+                const storePopupContent = `
+                    <div style="min-width: 200px;">
+                        <b>Store for Request #${request.id}</b><br>
+                        <i class="fas fa-store me-1"></i> ${request.storeName || 'Store name not specified'}<br>
+                        <i class="fas fa-map-marker-alt me-1"></i> ${request.storeAddress || 'Store address not specified'}<br>
+                        <i class="fas fa-euro-sign me-1"></i> Total: €${totalAmount}<br>
+                        <button class="btn btn-sm btn-outline-success mt-2" onclick="openModalForRequest(${request.id})">View Details</button>
+                    </div>
+                `;
+                storeMarker.bindPopup(storePopupContent);
+
+                storeMarker.on('click', () => {
+                    const card = document.getElementById(`request-card-${request.id}`);
+                    if (card) {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        card.classList.add('bg-light');
+                        setTimeout(() => card.classList.remove('bg-light'), 2000);
+                    }
+                });
+
+                markers[`store-${request.id}`] = storeMarker;
             }
         });
     }
@@ -226,6 +326,8 @@
         document.getElementById('modalEstimatedPrice').textContent = request.estimatedItemsPrice.toFixed(2);
         document.getElementById('modalDeliveryFee').textContent = request.deliveryFee.toFixed(2);
         document.getElementById('modalTotalAmount').textContent = (request.estimatedItemsPrice + request.deliveryFee).toFixed(2);
+        document.getElementById('modalStoreName').textContent = request.storeName || 'Not specified';
+        document.getElementById('modalStoreAddress').textContent = request.storeAddress || 'Address not specified';
 
         const itemsList = document.getElementById('modalItemsList');
         itemsList.innerHTML = '';

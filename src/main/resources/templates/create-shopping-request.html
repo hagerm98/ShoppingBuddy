@@ -50,6 +50,25 @@
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
+                                    <label for="storeName" class="form-label">Store Name *</label>
+                                    <input type="text" class="form-control" id="storeName"
+                                           name="storeName" required maxlength="200"
+                                           placeholder="e.g. Lidl, Aldi, or any local shop name">
+                                    <div class="form-text">Name of the store where shopping should be done</div>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="storeAddress" class="form-label">Store Address *</label>
+                                    <input type="text" class="form-control" id="storeAddress"
+                                           name="storeAddress" required maxlength="500"
+                                           placeholder="Store location address">
+                                    <div class="form-text">Complete address of the preferred store</div>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
                                     <label for="estimatedItemsPrice" class="form-label">Estimated Items Price (€) *</label>
                                     <input type="number" class="form-control" id="estimatedItemsPrice"
                                            name="estimatedItemsPrice" step="0.01" min="0.01" required
@@ -320,12 +339,16 @@
                 const deliveryAddressValue = formData.get('deliveryAddress');
                 const estimatedItemsPriceValue = formData.get('estimatedItemsPrice');
                 const deliveryFeeValue = formData.get('deliveryFee');
+                const storeNameValue = formData.get('storeName');
+                const storeAddressValue = formData.get('storeAddress');
 
                 const requestData = {
                     items: [],
                     deliveryAddress: deliveryAddressValue ? deliveryAddressValue.toString() : '',
                     estimatedItemsPrice: estimatedItemsPriceValue ? parseFloat(estimatedItemsPriceValue.toString()) : 0,
-                    deliveryFee: deliveryFeeValue ? parseFloat(deliveryFeeValue.toString()) : 0
+                    deliveryFee: deliveryFeeValue ? parseFloat(deliveryFeeValue.toString()) : 0,
+                    storeName: storeNameValue ? storeNameValue.toString() : '',
+                    storeAddress: storeAddressValue ? storeAddressValue.toString() : ''
                 };
 
                 const itemsData = {};

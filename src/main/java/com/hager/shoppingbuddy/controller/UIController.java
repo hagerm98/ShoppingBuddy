@@ -169,4 +169,14 @@ public class UIController {
 
         return "payment-success";
     }
+
+    @GetMapping("/shopper/balance")
+    public String shopperBalance(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("SHOPPER"))) {
+            return "redirect:/";
+        }
+
+        return "shopper-balance";
+    }
 }

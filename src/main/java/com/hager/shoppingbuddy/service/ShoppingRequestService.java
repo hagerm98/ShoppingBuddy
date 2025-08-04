@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,7 @@ public class ShoppingRequestService {
     private final GeocodingService geocodingService;
     private final ShoppingRequestNotificationService notificationService;
     private final PaymentService paymentService;
+    private final ShopperService shopperService;
 
     @Transactional
     public ShoppingRequestResponse createShoppingRequest(String customerEmail, ShoppingRequestCreateRequest request)
@@ -178,6 +180,11 @@ public class ShoppingRequestService {
             savedRequest.setPaymentStatus(payment.getStatus());
             shoppingRequestRepository.save(savedRequest);
             log.info("Payment captured successfully for completed shopping request: {}", requestId);
+
+            BigDecimal totalAmount = BigDecimal.valueOf(savedRequest.getEstimatedItemsPrice() + savedRequest.getDeliveryFee());
+            shopperService.addToBalanceById(savedRequest.getShopper().getId(), totalAmount);
+            log.info("Added {} to shopper balance for completed request: {}", totalAmount, requestId);
+
         } catch (Exception e) {
             log.error("Failed to capture payment for shopping request: {}", requestId, e);
             throw new InvalidShoppingRequestActionException("Failed to capture payment for completed shopping request");

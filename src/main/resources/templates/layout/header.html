@@ -60,6 +60,7 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="/profile"><i class="fas fa-user-circle me-2"></i>My Profile</a></li>
+                            <li sec:authorize="hasAuthority('SHOPPER')"><a class="dropdown-item" href="/shopper/balance"><i class="fas fa-wallet me-2"></i>My Balance</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="post" action="/logout" class="d-inline">

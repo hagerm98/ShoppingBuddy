@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/header :: head('My Balance - ShoppingBuddy')}"></head>
+<body>
+    <nav th:replace="~{layout/header :: navbar('balance')}"></nav>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="display-5 fw-bold text-primary">
+                        <i class="fas fa-wallet me-2"></i>My Balance
+                    </h1>
+                </div>
+            </div>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-euro-sign me-2"></i>Current Balance
+                        </h4>
+                    </div>
+                    <div class="card-body text-center py-5">
+                        <div id="loadingBalance" class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading your balance...</p>
+                        </div>
+                        <div id="balanceContent" style="display: none;">
+                            <div class="display-3 fw-bold text-success mb-3">
+                                €<span id="currentBalance">0.00</span>
+                            </div>
+                            <p class="text-muted lead">
+                                This is your available balance from completed shopping requests
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>How Your Balance Works
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-shopping-cart"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="fw-bold">Complete Requests</h6>
+                                        <p class="text-muted small mb-0">
+                                            When you complete a shopping request, the full payment amount is added to your balance.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-plus"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="fw-bold">Automatic Addition</h6>
+                                        <p class="text-muted small mb-0">
+                                            Your balance updates automatically when shopping requests are completed.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-shield-alt"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="fw-bold">Secure Storage</h6>
+                                        <p class="text-muted small mb-0">
+                                            Your balance is safely stored and tracked in our secure system.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="fw-bold">Real-time Updates</h6>
+                                        <p class="text-muted small mb-0">
+                                            Your balance is updated in real-time as you complete shopping requests.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Withdrawal Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info mb-3" role="alert">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-tools fa-2x text-info me-3"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="alert-heading">
+                                        <strong>Balance Withdrawal Feature Coming Soon</strong>
+                                    </h6>
+                                    <p class="mb-2">
+                                        We're currently working on implementing secure balance withdrawal functionality to allow you to transfer your earnings to your bank account.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <p class="text-muted mb-3">
+                                In the meantime, your balance will continue to accumulate from completed shopping requests.
+                            </p>
+                            <button class="btn btn-secondary" disabled>
+                                <i class="fas fa-university me-2"></i>Withdraw Balance (Coming Soon)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>Quick Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-6 mb-3">
+                                <a href="/shopping-requests/browse" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-search me-2"></i>Browse Available Requests
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <a href="/shopping-requests" class="btn btn-outline-primary btn-lg w-100">
+                                    <i class="fas fa-history me-2"></i>View Request History
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+    <script th:replace="~{layout/footer :: scripts}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBalance();
+        });
+
+        async function loadBalance() {
+            const loadingDiv = document.getElementById('loadingBalance');
+            const balanceContent = document.getElementById('balanceContent');
+            const currentBalanceSpan = document.getElementById('currentBalance');
+
+            try {
+                const response = await fetch('/api/shopper/balance', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    const balance = await response.json();
+                    currentBalanceSpan.textContent = parseFloat(balance).toFixed(2);
+
+                    loadingDiv.style.display = 'none';
+                    balanceContent.style.display = 'block';
+                } else if (response.status === 403) {
+                    throw new Error('Access denied. You must be a shopper to view balance.');
+                } else {
+                    throw new Error('Failed to load balance. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error loading balance:', error);
+                loadingDiv.style.display = 'none';
+                showAlert('danger', error.message);
+            }
+        }
+
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    <i class="fas ${iconClass} me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+
+            alertContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

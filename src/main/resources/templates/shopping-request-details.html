@@ -375,9 +375,10 @@
 
                 if (isAssignedShopper) {
                     if (currentRequest.status === 'ACCEPTED') {
-                        actionButtons.appendChild(createActionButton('Abandon Request', 'btn-warning', 'fas fa-times-circle', () => cancelRequest()));
+                        actionButtons.appendChild(createActionButton('Abandon Request', 'btn-warning', 'fas fa-times-circle', () => abandonRequest()));
                         actionButtons.appendChild(createActionButton('Start Shopping', 'btn-primary', 'fas fa-play', () => startShopping()));
                     } else if (currentRequest.status === 'IN_PROGRESS') {
+                        actionButtons.appendChild(createActionButton('Abandon Request', 'btn-warning', 'fas fa-times-circle', () => abandonRequest()));
                         actionButtons.appendChild(createActionButton('Complete Shopping', 'btn-success', 'fas fa-check-circle', () => completeShopping()));
                     }
                 }
@@ -423,6 +424,31 @@
             } catch (error) {
                 console.error('Error cancelling request:', error);
                 showAlert('danger', 'An error occurred while cancelling the request.');
+            }
+        }
+
+        async function abandonRequest() {
+            if (!confirm('Are you sure you want to abandon this shopping request? It will return to PENDING status for other shoppers to accept.')) return;
+
+            try {
+                const response = await fetch(`/api/shopping-requests/${requestId}/abandon`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    showAlert('success', 'Request abandoned successfully. Redirecting to browse requests...');
+
+                    setTimeout(() => {
+                        window.location.href = '/shopping-requests';
+                    }, 2000);
+                } else {
+                    const errorMessage = await response.text();
+                    showAlert('danger', errorMessage);
+                }
+            } catch (error) {
+                console.error('Error abandoning request:', error);
+                showAlert('danger', 'An error occurred while abandoning the request.');
             }
         }
 

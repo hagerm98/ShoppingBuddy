@@ -122,6 +122,20 @@ public class ShoppingRequestNotificationService {
         }
     }
 
+    public void notifyShoppingRequestAbandoned(ShoppingRequest shoppingRequest, String shopperEmail) {
+        try {
+            User customer = shoppingRequest.getCustomer().getUser();
+
+            String subject = "Shopping Request Available Again - #" + shoppingRequest.getId();
+            String emailBody = buildShoppingRequestAbandonedEmail(shoppingRequest, customer, shopperEmail);
+
+            emailService.send(customer.getEmail(), subject, emailBody);
+            log.info("Shopping request abandoned notification sent to customer: {}", customer.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send shopping request abandoned notification: {}", e.getMessage());
+        }
+    }
+
     private String buildShoppingRequestCreatedEmail(ShoppingRequest request, User customer) {
         return String.format("""
             <html>
@@ -434,6 +448,48 @@ public class ShoppingRequestNotificationService {
             request.getDeliveryAddress(),
             request.getEstimatedItemsPrice(),
             request.getDeliveryFee(),
+            baseUrl,
+            request.getId()
+        );
+    }
+
+    private String buildShoppingRequestAbandonedEmail(ShoppingRequest request, User customer, String shopperEmail) {
+        return String.format("""
+            <html>
+            <body>
+                <h2>Shopping Request Available Again</h2>
+                <p>Hello %s,</p>
+                <p>Your shopping request #%d is now available for other shoppers to accept.</p>
+               \s
+                <div style="background-color: #f8d7da; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #dc3545;">
+                    <h3>Request Abandoned</h3>
+                    <p>The shopper (%s) has abandoned the request. It is now open for other shoppers.</p>
+                </div>
+               \s
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <h3>Request Details</h3>
+                    <p><strong>Request ID:</strong> #%d</p>
+                    <p><strong>Delivery Address:</strong> %s</p>
+                    <p><strong>Estimated Items Price:</strong> €%.2f</p>
+                    <p><strong>Delivery Fee:</strong> €%.2f</p>
+                    <p><strong>Status:</strong> %s</p>
+                </div>
+               \s
+                <p>You can track your request and communicate with shoppers once it's accepted.</p>
+                <p><a href="%s/shopping-requests/%d" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Request</a></p>
+               \s
+                <p>Best regards,<br>The ShoppingBuddy Team</p>
+            </body>
+            </html>
+           \s""",
+            customer.getFirstName(),
+            request.getId(),
+            shopperEmail,
+            request.getId(),
+            request.getDeliveryAddress(),
+            request.getEstimatedItemsPrice(),
+            request.getDeliveryFee(),
+            request.getStatus().name(),
             baseUrl,
             request.getId()
         );

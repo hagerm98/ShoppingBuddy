@@ -395,6 +395,111 @@ class ShoppingRequestNotificationServiceTest {
     }
 
     @Nested
+    @DisplayName("Notify Shopping Request Abandoned Tests")
+    class NotifyShoppingRequestAbandonedTests {
+
+        @Test
+        @DisplayName("Should send notification to customer when shopper abandons request")
+        void notifyShoppingRequestAbandoned_WhenShopperAbandons_ShouldSendEmail() {
+            // Given
+            doNothing().when(emailService).send(anyString(), anyString(), anyString());
+
+            // When
+            notificationService.notifyShoppingRequestAbandoned(shoppingRequest, "shopper@example.com");
+
+            // Then
+            verify(emailService).send(
+                    eq("customer@example.com"),
+                    eq("Shopping Request Available Again - #100"),
+                    argThat(emailBody ->
+                            emailBody.contains("Hager") &&
+                            emailBody.contains("shopper@example.com") &&
+                            emailBody.contains("Request Abandoned") &&
+                            emailBody.contains("123 Main Street, Dublin") &&
+                            emailBody.contains("50.00") &&
+                            emailBody.contains("5.00") &&
+                            emailBody.contains("shopping-requests/100")
+                    )
+            );
+        }
+
+        @Test
+        @DisplayName("Should handle email service failure gracefully")
+        void notifyShoppingRequestAbandoned_WhenEmailServiceFails_ShouldNotThrow() {
+            // Given
+            doThrow(new RuntimeException("Email service unavailable"))
+                    .when(emailService).send(anyString(), anyString(), anyString());
+
+            // When & Then - should not throw exception
+            notificationService.notifyShoppingRequestAbandoned(shoppingRequest, "shopper@example.com");
+
+            verify(emailService).send(anyString(), anyString(), anyString());
+        }
+
+        @Test
+        @DisplayName("Should handle request with null customer gracefully")
+        void notifyShoppingRequestAbandoned_WhenNullCustomer_ShouldNotThrow() {
+            // Given
+            ShoppingRequest requestWithNullCustomer = ShoppingRequest.builder()
+                    .id(100L)
+                    .customer(null)
+                    .build();
+
+            // When & Then - should not throw exception
+            notificationService.notifyShoppingRequestAbandoned(requestWithNullCustomer, "shopper@example.com");
+
+            verify(emailService, never()).send(anyString(), anyString(), anyString());
+        }
+
+        @Test
+        @DisplayName("Should send email with correct content when request has PENDING status")
+        void notifyShoppingRequestAbandoned_WhenRequestIsPending_ShouldIncludeCorrectStatus() {
+            // Given
+            ShoppingRequest pendingRequest = ShoppingRequest.builder()
+                    .id(100L)
+                    .customer(customer)
+                    .deliveryAddress("123 Main Street, Dublin")
+                    .estimatedItemsPrice(50.00)
+                    .deliveryFee(5.00)
+                    .status(ShoppingRequestStatus.PENDING)
+                    .build();
+
+            doNothing().when(emailService).send(anyString(), anyString(), anyString());
+
+            // When
+            notificationService.notifyShoppingRequestAbandoned(pendingRequest, "shopper@example.com");
+
+            // Then
+            verify(emailService).send(
+                    eq("customer@example.com"),
+                    eq("Shopping Request Available Again - #100"),
+                    argThat(emailBody ->
+                            emailBody.contains("PENDING") &&
+                            emailBody.contains("now open for other shoppers")
+                    )
+            );
+        }
+
+        @Test
+        @DisplayName("Should handle different shopper email formats")
+        void notifyShoppingRequestAbandoned_WhenDifferentShopperEmail_ShouldIncludeInMessage() {
+            // Given
+            String shopperEmail = "different.shopper@test.com";
+            doNothing().when(emailService).send(anyString(), anyString(), anyString());
+
+            // When
+            notificationService.notifyShoppingRequestAbandoned(shoppingRequest, shopperEmail);
+
+            // Then
+            verify(emailService).send(
+                    eq("customer@example.com"),
+                    eq("Shopping Request Available Again - #100"),
+                    argThat(emailBody -> emailBody.contains(shopperEmail))
+            );
+        }
+    }
+
+    @Nested
     @DisplayName("Edge Cases and Error Handling Tests")
     class EdgeCasesAndErrorHandlingTests {
 

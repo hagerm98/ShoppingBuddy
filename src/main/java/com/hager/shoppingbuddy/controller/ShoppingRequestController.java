@@ -133,6 +133,22 @@ public class ShoppingRequestController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/{requestId}/abandon")
+    public ResponseEntity<ShoppingRequestResponse> abandonShoppingRequest(
+            @PathVariable Long requestId,
+            Authentication authentication
+    ) throws ShopperNotFoundException, InvalidShoppingRequestActionException,
+            UnauthorizedRoleException, ShoppingRequestNotFoundException {
+
+        verifyUserRole(authentication, UserRole.SHOPPER);
+        log.info("Abandoning shopping request {} by shopper: {}", requestId, authentication.getName());
+
+        ShoppingRequestResponse response = shoppingRequestService.abandonShoppingRequest(
+                requestId, authentication.getName());
+
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/{requestId}/cancel")
     public ResponseEntity<ShoppingRequestResponse> cancelShoppingRequest(
             @PathVariable Long requestId,

@@ -185,6 +185,37 @@ public class ShoppingRequestService {
     }
 
     @Transactional
+    public ShoppingRequestResponse abandonShoppingRequest(Long requestId, String shopperEmail)
+            throws InvalidShoppingRequestActionException, ShopperNotFoundException, ShoppingRequestNotFoundException {
+        log.info("Shopper {} abandoning shopping request: {}", shopperEmail, requestId);
+
+        Shopper shopper = shopperRepository.findByUserEmail(shopperEmail)
+                .orElseThrow(() -> new ShopperNotFoundException("Shopper not found with email: " + shopperEmail));
+
+        ShoppingRequest request = shoppingRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ShoppingRequestNotFoundException("Shopping request not found with ID: " + requestId));
+
+        if (request.getShopper() == null || !request.getShopper().getId().equals(shopper.getId())) {
+            throw new InvalidShoppingRequestActionException("Shopping request is not assigned to this shopper");
+        }
+
+        if (request.getStatus() != ShoppingRequestStatus.ACCEPTED && request.getStatus() != ShoppingRequestStatus.IN_PROGRESS) {
+            throw new InvalidShoppingRequestActionException("Can only abandon ACCEPTED or IN_PROGRESS shopping requests");
+        }
+
+        request.setShopper(null);
+        request.setStatus(ShoppingRequestStatus.PENDING);
+        request.setUpdatedAt(Instant.now());
+
+        ShoppingRequest savedRequest = shoppingRequestRepository.save(request);
+
+        notificationService.notifyShoppingRequestAbandoned(savedRequest, shopperEmail);
+
+        log.info("Shopping request {} abandoned by shopper {} and returned to PENDING", requestId, shopperEmail);
+        return convertToResponse(savedRequest);
+    }
+
+    @Transactional
     public ShoppingRequestResponse cancelShoppingRequest(Long requestId, String userEmail)
             throws InvalidShoppingRequestActionException, ShoppingRequestNotFoundException {
         log.info("Cancelling shopping request: {} by user: {}", requestId, userEmail);
@@ -192,12 +223,11 @@ public class ShoppingRequestService {
         ShoppingRequest request = shoppingRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ShoppingRequestNotFoundException("Shopping request not found with ID: " + requestId));
 
-        // Check if user is either the customer or the assigned shopper
+        // Only customers can cancel requests
         boolean isCustomer = request.getCustomer().getUser().getEmail().equals(userEmail);
-        boolean isShopper = request.getShopper() != null && request.getShopper().getUser().getEmail().equals(userEmail);
 
-        if (!isCustomer && !isShopper) {
-            throw new InvalidShoppingRequestActionException("User not authorized to cancel this request");
+        if (!isCustomer) {
+            throw new InvalidShoppingRequestActionException("Only customers can cancel shopping requests");
         }
 
         if (request.getStatus() == ShoppingRequestStatus.COMPLETED || request.getStatus() == ShoppingRequestStatus.CANCELLED) {
@@ -220,7 +250,7 @@ public class ShoppingRequestService {
 
         notificationService.notifyShoppingRequestCancelled(savedRequest, userEmail);
 
-        log.info("Shopping request {} cancelled by user: {}", requestId, userEmail);
+        log.info("Shopping request {} cancelled by customer: {}", requestId, userEmail);
         return convertToResponse(savedRequest);
     }
 

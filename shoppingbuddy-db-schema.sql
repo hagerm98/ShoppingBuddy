@@ -22,6 +22,8 @@ drop table if exists token_sequence;
 drop table if exists tokens;
 drop table if exists user_id_seq;
 drop table if exists users;
+drop table if exists SPRING_SESSION_ATTRIBUTES;
+drop table if exists SPRING_SESSION;
 create table chat_message_id_seq (next_val bigint) engine=InnoDB;
 insert into chat_message_id_seq values ( 1 );
 create table chat_messages (id bigint not null, sender_id bigint not null, shopping_request_id bigint not null, timestamp datetime(6) not null, message_content varchar(1000) not null, primary key (id)) engine=InnoDB;

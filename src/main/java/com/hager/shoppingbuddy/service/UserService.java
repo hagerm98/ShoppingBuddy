@@ -145,6 +145,11 @@ public class UserService implements UserDetailsService {
     private void createRoleSpecificEntity(User user) {
         log.info("Creating role-specific entity for user: {} with role: {}", user.getEmail(), user.getRole());
 
+        if (user.getRole() == null) {
+            log.error("User role is null for user: {}", user.getEmail());
+            throw new IllegalArgumentException("Unknown user role: null");
+        }
+
         switch (user.getRole()) {
             case CUSTOMER:
                 Customer customer = Customer.builder()

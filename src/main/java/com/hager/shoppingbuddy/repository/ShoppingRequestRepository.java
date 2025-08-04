@@ -14,8 +14,6 @@ public interface ShoppingRequestRepository extends JpaRepository<ShoppingRequest
 
     Optional<ShoppingRequest> findByIdAndShopperId(Long id, Long shopperId);
 
-    List<ShoppingRequest> findByStatusOrderByCreatedAtDesc(ShoppingRequestStatus status);
-
     List<ShoppingRequest> findByStatusAndPaymentStatusOrderByCreatedAtDesc(ShoppingRequestStatus status, PaymentStatus paymentStatus);
 
     List<ShoppingRequest> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
